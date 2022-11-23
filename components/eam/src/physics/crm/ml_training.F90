@@ -6,7 +6,9 @@ module ml_training
 
    use shr_kind_mod,       only: r8 => shr_kind_r8
    use spmd_utils,         only: masterproc
-   use constituents,       only: pcnst
+   use constituents,       only: pcnst ! for q and cflx
+   use seq_drydep_mod,     only: n_drydep ! for depvel
+   use shr_megan_mod,      only: shr_megan_mechcomps_n ! for meganflx
    use ppgrid,             only: pver, pverp, pcols, begchunk, endchunk
    use cam_abortutils,     only: endrun
    use cam_history_support,only: fillvalue
@@ -105,13 +107,54 @@ CONTAINS
       logical              :: add_cam_out    = .false.
 
       ! file variable descriptions
+
+      ! cam_out
+      ! [] tbot(:)     ! bot level temperature
+      ! [] zbot(:)     ! bot level height above surface
+      ! [] ubot(:)     ! bot level u wind
+      ! [] vbot(:)     ! bot level v wind
+      ! [] qbot(:,:)   ! bot level specific humidity
+      ! [] pbot(:)     ! bot level pressure
+      ! [] rho(:)      ! bot level density
+      ! [] netsw(:)    !
+      ! [] flwds(:)    !
+      ! [] precsc(:)   !
+      ! [] precsl(:)   !
+      ! [] precc(:)    !
+      ! [] precl(:)    !
+      ! [] soll(:)     !
+      ! [] sols(:)     !
+      ! [] solld(:)    !
+      ! [] solsd(:)    !
+      ! [] thbot(:)    !
+      ! [] co2prog(:)  ! prognostic co2
+      ! [] co2diag(:)  ! diagnostic co2
+      ! [] psl(:)
+      ! [] bcphiwet(:) ! wet deposition of hydrophilic black carbon
+      ! [] bcphidry(:) ! dry deposition of hydrophilic black carbon
+      ! [] bcphodry(:) ! dry deposition of hydrophobic black carbon
+      ! [] ocphiwet(:) ! wet deposition of hydrophilic organic carbon
+      ! [] ocphidry(:) ! dry deposition of hydrophilic organic carbon
+      ! [] ocphodry(:) ! dry deposition of hydrophobic organic carbon
+      ! [] dstwet1(:)  ! wet deposition of dust (bin1)
+      ! [] dstdry1(:)  ! dry deposition of dust (bin1)
+      ! [] dstwet2(:)  ! wet deposition of dust (bin2)
+      ! [] dstdry2(:)  ! dry deposition of dust (bin2)
+      ! [] dstwet3(:)  ! wet deposition of dust (bin3)
+      ! [] dstdry3(:)  ! dry deposition of dust (bin3)
+      ! [] dstwet4(:)  ! wet deposition of dust (bin4)
+      ! [] dstdry4(:)  ! dry deposition of dust (bin4)
+      ! [] wsresp(:)   ! first-order response of low-level wind to surface fluxes
+      ! [] tau_est(:)  ! stress estimated to be in equilibrium with ubot/vbot
+      ! [] ugust(:)    ! gustiness value
+      ! [] uovern(:)       ! ratio of wind speed/brunt vaisalla frequency
       ! type(var_desc_t)     :: desc_trefmxav
       ! type(var_desc_t)     :: desc_trefmnav
       type(var_desc_t)     :: desc_tbot
       type(var_desc_t)     :: desc_zbot
       type(var_desc_t)     :: desc_ubot
       type(var_desc_t)     :: desc_vbot
-      type(var_desc_t)     :: desc_qbot
+      type(var_desc_t)     :: desc_qbot(pcnst)
       type(var_desc_t)     :: desc_pbot
       type(var_desc_t)     :: desc_rho
       type(var_desc_t)     :: desc_netsw
@@ -141,6 +184,35 @@ CONTAINS
       ! type(var_desc_t)     :: desc_dstdry3
       ! type(var_desc_t)     :: desc_dstdry4
 
+      ! physics_state
+      ! [] ps(:)        ! surface pressure
+      ! [] psdry(:)     ! dry surface pressure
+      ! [] phis(:)      ! surface geopotential
+      ! [] ulat(:)      ! unique latitudes  (radians)
+      ! [] ulon(:)      ! unique longitudes (radians)
+      ! [] t(:,:)       ! temperature (K)
+      ! [] u(:,:)       ! zonal wind (m/s)
+      ! [] v(:,:)       ! meridional wind (m/s)
+      ! [] s(:,:)       ! dry static energy
+      ! [] omega(:,:)   ! vertical pressure velocity (Pa/s)
+      ! [] pmid(:,:)    ! midpoint pressure (Pa)
+      ! [] pmiddry(:,:) ! midpoint pressure dry (Pa)
+      ! [] pdel(:,:)    ! layer thickness (Pa)
+      ! [] pdeldry(:,:) ! layer thickness dry (Pa)
+      ! [] rpdel(:,:)   ! reciprocal of layer thickness (Pa)
+      ! [] rpdeldry(:,:)! recipricol layer thickness dry (Pa)
+      ! [] lnpmid(:,:)  ! ln(pmid)
+      ! [] lnpmiddry(:,:)! log midpoint pressure dry (Pa)
+      ! [] exner(:,:)   ! inverse exner function w.r.t. surface pressure (ps/p)^(R/cp)
+      ! [] zm(:,:)      ! geopotential height above surface at midpoints (m)
+      ! [] q (:,:,:)    ! constituent mixing ratio (kg/kg moist or dry air depending on type)
+      !
+      ! (Diagnostic, grid, carbon-flux variables are omitted:
+      !  pint, pintdry, lnpint, lnpintdry, zi,
+      !  te_ini, te_cur, tw_ini, tw_cur, tc_curr, tc_init, tc_mnst, tc_prev,
+      !  c_flux_sfc, c_mflx_air, c_mflx_sff, c_mflx_lnd, c_mflx_ocn,
+      !  c_iflx_sfc, c_iflx_air, c_iflx_sff, c_iflx_lnd, c_iflx_ocn
+      ! )
       type(var_desc_t)     :: state_desc_t
       type(var_desc_t)     :: state_desc_u
       type(var_desc_t)     :: state_desc_v
@@ -163,13 +235,54 @@ CONTAINS
       type(var_desc_t)     :: state_desc_lnpintdry
       type(var_desc_t)     :: state_desc_zi
 
+      ! physics_tend
+      ! [] dtdt(:,:)
+      ! [] dudt(:,:)
+      ! [] dvdt(:,:)
+      ! [] flx_net(:)
+      ! [] te_tnd(:) ! cumulative boundary flux of total energy
+      ! [] tw_tnd(:) ! cumulative boundary flux of total water
       type(var_desc_t)     :: tend_desc_dtdt
       type(var_desc_t)     :: tend_desc_dudt
       type(var_desc_t)     :: tend_desc_dvdt
       type(var_desc_t)     :: tend_desc_flx_net
       type(var_desc_t)     :: tend_desc_te_tnd
       type(var_desc_t)     :: tend_desc_tw_tnd
-
+      
+      ! cam_in
+      ! [] asdir(:)      ! albedo: shortwave, direct
+      ! [] asdif(:)      ! albedo: shortwave, diffuse
+      ! [] aldir(:)      ! albedo: longwave, direct
+      ! [] aldif(:)      ! albedo: longwave, diffuse
+      ! [] lwup(:)       ! longwave up radiative flux
+      ! [] lhf(:)        ! latent heat flux
+      ! [] shf(:)        ! sensible heat flux
+      ! [] h2otemp(:)    ! water temperature heat flux from ocean
+      ! [] wsx(:)        ! surface u-stress (N)
+      ! [] wsy(:)        ! surface v-stress (N)
+      ! [] tref(:)       ! ref height surface air temp
+      ! [] qref(:)       ! ref height specific humidity
+      ! [] u10(:)        ! 10m wind speed
+      ! [] ts(:)         ! merged surface temp
+      ! [] sst(:)        ! sea surface temp
+      ! [] snowhland(:)  ! snow depth (liquid water equivalent) over land
+      ! [] snowhice(:)   ! snow depth over ice
+      ! [] fco2_lnd(:)   ! co2 flux from lnd
+      ! [] fco2_ocn(:)   ! co2 flux from ocn
+      ! [] fdms(:)       ! dms flux
+      ! [] landfrac(:)   ! land area fraction
+      ! [] icefrac(:)    ! sea-ice areal fraction
+      ! [] ocnfrac(:)    ! ocean areal fraction
+      ! [] ram1       !aerodynamical resistance (s/m) (pcols)
+      ! [] fv         !friction velocity (m/s) (pcols)
+      ! [] soilw      !volumetric soil water (m3/m3)
+      ! [] cflx(:,:)     ! constituent flux (emissions), dims: [:,pcnst]
+      ! [] ustar(:)      ! atm/ocn saved version of ustar
+      ! [] re(:)         ! atm/ocn saved version of re
+      ! [] ssq(:)        ! atm/ocn saved version of ssq
+      ! [] depvel(:,:)   ! deposition velocities, dims: [:,n_drydep]
+      ! [] dstflx(:,:)   ! dust fluxes, dims: [:,4] ! 4 bins from surface model
+      ! [] meganflx(:,:) ! MEGAN fluxes, dims: [:,shr_megan_mechcomps_n]
       type(var_desc_t)     :: desc_asdir
       type(var_desc_t)     :: desc_asdif
       type(var_desc_t)     :: desc_aldir
@@ -200,9 +313,9 @@ CONTAINS
       type(var_desc_t)     :: desc_ustar
       type(var_desc_t)     :: desc_re
       type(var_desc_t)     :: desc_ssq
-      type(var_desc_t)     :: desc_depvel
-      type(var_desc_t)     :: desc_dstflx
-      type(var_desc_t)     :: desc_meganflx
+      type(var_desc_t)     :: desc_depvel(n_drydep)
+      type(var_desc_t)     :: desc_dstflx(4)
+      type(var_desc_t)     :: desc_meganflx(shr_megan_mechcomps_n)
       !-------------------------------------------------------------------------
       ! Initialize stuff
       !-------------------------------------------------------------------------
@@ -299,11 +412,14 @@ CONTAINS
       !-------------------------------------------------------------------------
       ! define cam_out variables
       if (add_cam_out) then
+         do m=1,pcnst
+            write(num,'(i4.4)') m
+            ierr = pio_def_var(file, 'cam_out_QBOT'//num, pio_double, dimids_hrz, desc_qbot(m))
+         end do
          ierr = pio_def_var(file, 'cam_out_TBOT', pio_double, dimids_hrz, desc_tbot )
          ierr = pio_def_var(file, 'cam_out_ZBOT', pio_double, dimids_hrz, desc_zbot )
          ierr = pio_def_var(file, 'cam_out_UBOT', pio_double, dimids_hrz, desc_ubot )
          ierr = pio_def_var(file, 'cam_out_VBOT', pio_double, dimids_hrz, desc_vbot )
-         ierr = pio_def_var(file, 'cam_out_QBOT', pio_double, dimids_hrz, desc_qbot )
          ierr = pio_def_var(file, 'cam_out_PBOT', pio_double, dimids_hrz, desc_pbot )
          ierr = pio_def_var(file, 'cam_out_RHO', pio_double, dimids_hrz, desc_rho )
          ierr = pio_def_var(file, 'cam_out_NETSW', pio_double, dimids_hrz, desc_netsw )
@@ -360,8 +476,20 @@ CONTAINS
          do m=1,pcnst
             write(num,'(i4.4)') m
             ierr = pio_def_var(file, 'cam_in_CFLX'//num,  pio_double, dimids_hrz, desc_cflx(m))
+         end do
+
+         do m=1,n_drydep
+            write(num,'(i4.4)') m
             ierr = pio_def_var(file, 'cam_in_DEPVEL'//num,  pio_double, dimids_hrz, desc_depvel(m))
+         end do
+
+         do m=1,4
+            write(num,'(i4.4)') m
             ierr = pio_def_var(file, 'cam_in_DSTFLX'//num,  pio_double, dimids_hrz, desc_dstflx(m))
+         end do
+
+         do m=1,shr_megan_mechcomps_n
+            write(num,'(i4.4)') m
             ierr = pio_def_var(file, 'cam_in_MEGANFLX'//num,  pio_double, dimids_hrz, desc_meganflx(m))
          end do
       end if
@@ -544,39 +672,6 @@ CONTAINS
 
       !-------------------------------------------------------------------------
       ! Write cam_in components
-      ! :: asdir(:)      ! albedo: shortwave, direct
-      ! :: asdif(:)      ! albedo: shortwave, diffuse
-      ! :: aldir(:)      ! albedo: longwave, direct
-      ! :: aldif(:)      ! albedo: longwave, diffuse
-      ! :: lwup(:)       ! longwave up radiative flux
-      ! :: lhf(:)        ! latent heat flux
-      ! :: shf(:)        ! sensible heat flux
-      ! :: h2otemp(:)    ! water temperature heat flux from ocean
-      ! :: wsx(:)        ! surface u-stress (N)
-      ! :: wsy(:)        ! surface v-stress (N)
-      ! :: tref(:)       ! ref height surface air temp
-      ! :: qref(:)       ! ref height specific humidity
-      ! :: u10(:)        ! 10m wind speed
-      ! :: ts(:)         ! merged surface temp
-      ! :: sst(:)        ! sea surface temp
-      ! :: snowhland(:)  ! snow depth (liquid water equivalent) over land
-      ! :: snowhice(:)   ! snow depth over ice
-      ! :: fco2_lnd(:)   ! co2 flux from lnd
-      ! :: fco2_ocn(:)   ! co2 flux from ocn
-      ! :: fdms(:)       ! dms flux
-      ! :: landfrac(:)   ! land area fraction
-      ! :: icefrac(:)    ! sea-ice areal fraction
-      ! :: ocnfrac(:)    ! ocean areal fraction
-      ! :: ram1       !aerodynamical resistance (s/m) (pcols)
-      ! :: fv         !friction velocity (m/s) (pcols)
-      ! :: soilw      !volumetric soil water (m3/m3)
-      ! :: cflx(:,:)     ! constituent flux (emissions)
-      ! :: ustar(:)      ! atm/ocn saved version of ustar
-      ! :: re(:)         ! atm/ocn saved version of re
-      ! :: ssq(:)        ! atm/ocn saved version of ssq
-      ! :: depvel   ! deposition velocities
-      ! :: dstflx   ! dust fluxes
-      ! :: meganflx ! MEGAN fluxes
       if (add_cam_in) then
 
          do m=1,pcnst
@@ -586,21 +681,21 @@ CONTAINS
             call pio_write_darray(file, desc_cflx(m), iodesc2d, tmp2D, ierr)
          end do
 
-         do m=1,pcnst
+         do m=1,n_drydep
             do i=begchunk,endchunk
                tmp2D(:ncol(i), i) = cam_in(i)%depvel(:ncol(i), m)
             end do
             call pio_write_darray(file, desc_depvel(m), iodesc2d, tmp2D, ierr)
          end do
 
-         do m=1,pcnst
+         do m=1,4
             do i=begchunk,endchunk
                tmp2D(:ncol(i), i) = cam_in(i)%dstflx(:ncol(i), m)
             end do
             call pio_write_darray(file, desc_dstflx(m), iodesc2d, tmp2D, ierr)
          end do
 
-         do m=1,pcnst
+         do m=1,shr_megan_mechcomps_n
             do i=begchunk,endchunk
                tmp2D(:ncol(i), i) = cam_in(i)%meganflx(:ncol(i), m)
             end do
@@ -637,9 +732,9 @@ CONTAINS
          end do
          call pio_write_darray(file, desc_lhf, iodesc2d, tmp2D, ierr)
 
-         do i=begchunk,endchunk                                                                                                                |           do i=begchunk,endchunk
-            tmp2D(:ncol(i), i) = cam_in(i)%shf(:ncol(i))                                                                                       |              tmp2D(:ncol(i), i) = cam_in(i)%shf(:ncol(i))
-         end do                                                                                                                                |           end do
+         do i=begchunk,endchunk
+            tmp2D(:ncol(i), i) = cam_in(i)%shf(:ncol(i))
+         end do
          call pio_write_darray(file, desc_shf, iodesc2d, tmp2D, ierr)
 
          do i=begchunk,endchunk
@@ -683,14 +778,14 @@ CONTAINS
          call pio_write_darray(file, desc_sst, iodesc2d, tmp2D, ierr)
 
          do i=begchunk,endchunk
-            tmp2D(:ncol(i), i) = cam_in(i)%snowland(:ncol(i))
+            tmp2D(:ncol(i), i) = cam_in(i)%snowhland(:ncol(i))
          end do
-         call pio_write_darray(file, desc_snowland, iodesc2d, tmp2D, ierr)
+         call pio_write_darray(file, desc_snowhland, iodesc2d, tmp2D, ierr)
 
          do i=begchunk,endchunk
-            tmp2D(:ncol(i), i) = cam_in(i)%snowice(:ncol(i))
+            tmp2D(:ncol(i), i) = cam_in(i)%snowhice(:ncol(i))
          end do
-         call pio_write_darray(file, desc_snowice, iodesc2d, tmp2D, ierr)
+         call pio_write_darray(file, desc_snowhice, iodesc2d, tmp2D, ierr)
 
          do i=begchunk,endchunk
             tmp2D(:ncol(i), i) = cam_in(i)%fco2_lnd(:ncol(i))
@@ -818,10 +913,12 @@ CONTAINS
          end do
          call pio_write_darray(file, desc_vbot, iodesc2d, tmp2D, ierr)
 
-         do i=begchunk,endchunk
-            tmp2D(:ncol(i), i) = cam_out(i)%qbot(:ncol(i))
+         do m=1,pcnst
+            do i=begchunk,endchunk
+               tmp2D(:ncol(i),i) = cam_out(i)%qbot(:ncol(i),m)
+            end do
+            call pio_write_darray(file, desc_qbot(m), iodesc2d, tmp2D, ierr)
          end do
-         call pio_write_darray(file, desc_qbot, iodesc2d, tmp2D, ierr)
 
          do i=begchunk,endchunk
             tmp2D(:ncol(i), i) = cam_out(i)%pbot(:ncol(i))
