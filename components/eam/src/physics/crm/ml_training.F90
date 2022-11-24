@@ -308,7 +308,7 @@ CONTAINS
       type(var_desc_t)     :: desc_ocnfrac
       type(var_desc_t)     :: desc_ram1
       type(var_desc_t)     :: desc_fv
-      type(var_desc_t)     :: desc_soilw
+      ! type(var_desc_t)     :: desc_soilw ! MOZART
       type(var_desc_t)     :: desc_cflx(pcnst)
       type(var_desc_t)     :: desc_ustar
       type(var_desc_t)     :: desc_re
@@ -468,7 +468,7 @@ CONTAINS
          ierr = pio_def_var(file, 'cam_in_OCNFRAC',  pio_double, dimids_hrz, desc_ocnfrac)
          ierr = pio_def_var(file, 'cam_in_RAM1',  pio_double, dimids_hrz, desc_ram1)
          ierr = pio_def_var(file, 'cam_in_FV',  pio_double, dimids_hrz, desc_fv)
-         ierr = pio_def_var(file, 'cam_in_SOILW',  pio_double, dimids_hrz, desc_soilw)
+         ! ierr = pio_def_var(file, 'cam_in_SOILW',  pio_double, dimids_hrz, desc_soilw) ! MOZART
          ierr = pio_def_var(file, 'cam_in_USTAR',  pio_double, dimids_hrz, desc_ustar)
          ierr = pio_def_var(file, 'cam_in_RE',  pio_double, dimids_hrz, desc_re)
          ierr = pio_def_var(file, 'cam_in_SSQ',  pio_double, dimids_hrz, desc_ssq)
@@ -827,10 +827,11 @@ CONTAINS
          end do
          call pio_write_darray(file, desc_fv, iodesc2d, tmp2D, ierr)
 
-         do i=begchunk,endchunk
-            tmp2D(:ncol(i), i) = cam_in(i)%soilw(:ncol(i))
-         end do
-         call pio_write_darray(file, desc_soilw, iodesc2d, tmp2D, ierr)
+         ! MOZART
+         ! do i=begchunk,endchunk
+         !   tmp2D(:ncol(i), i) = cam_in(i)%soilw(:ncol(i))
+         ! end do
+         ! call pio_write_darray(file, desc_soilw, iodesc2d, tmp2D, ierr)
 
          do i=begchunk,endchunk
             tmp2D(:ncol(i), i) = cam_in(i)%ustar(:ncol(i))
