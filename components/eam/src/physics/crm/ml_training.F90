@@ -84,10 +84,12 @@ CONTAINS
       type(cam_grid_header_info_t) :: header_info ! A structure to hold the horz dims and coord info
 
       integer :: ncol(begchunk:endchunk)                ! ncol value per chunk
-      type(io_desc_t), pointer :: iodesc2d              ! 
-      type(io_desc_t), pointer :: iodesc3d              ! 
-      real(r8):: tmp2D(pcols, begchunk:endchunk)        ! temp variable for derived type data
-      real(r8):: tmp3D(pcols, pver, begchunk:endchunk)  ! temp variable for derived type data
+      type(io_desc_t), pointer :: iodesc2d              ! pcols * (endchunk-begchunk+1)
+      type(io_desc_t), pointer :: iodesc3d              ! pcols * pver  * (endchunk-begchunk+1) 
+      type(io_desc_t), pointer :: iodesc3dp             ! pcols * pverp * (endchunk-begchunk+1)
+      real(r8):: tmp2D(pcols, begchunk:endchunk)          ! temp variable for derived type data
+      real(r8):: tmp3D(pcols, pver, begchunk:endchunk)    ! temp variable for derived type data
+      real(r8):: tmp3Dp(pcols, pverp, begchunk:endchunk)  ! temp variable for derived type data
 
       integer :: ierr, i, m
       integer :: physgrid
@@ -341,7 +343,9 @@ CONTAINS
       call cam_grid_dimensions(grid_id, gdims(1:2), nhdims)
       if (nhdims==1) then
          call cam_grid_get_decomp(grid_id, (/pcols,endchunk-begchunk+1/), (/gdims(1)/),      pio_double, iodesc2d)
-         call cam_grid_get_decomp(grid_id, (/pcols,endchunk-begchunk+1/), (/gdims(1),pver/), pio_double, iodesc3d)
+         !call cam_grid_get_decomp(grid_id, (/pcols,endchunk-begchunk+1/), (/gdims(1),pver/), pio_double, iodesc3d)
+         call cam_grid_get_decomp(grid_id, (/pcols,pver,endchunk-begchunk+1/), (/gdims(1),pver/), pio_double, iodesc3d)
+         call cam_grid_get_decomp(grid_id, (/pcols,pverp,endchunk-begchunk+1/), (/gdims(1),pverp/), pio_double, iodesc3dp)
       end if
       !-------------------------------------------------------------------------
       !-------------------------------------------------------------------------
@@ -508,8 +512,9 @@ CONTAINS
       ! (only do this once since all chunked vars have the same shape)
       do i=begchunk,endchunk
          if (ncol(i) < pcols) then
-            tmp2D(ncol(i)+1:,i)   = fillvalue
-            tmp3D(ncol(i)+1:,:,i) = fillvalue
+            tmp2D(ncol(i)+1:,i)    = fillvalue
+            tmp3D(ncol(i)+1:,:,i)  = fillvalue
+            tmp3Dp(ncol(i)+1:,:,i) = fillvalue
          end if
       end do
 
@@ -610,29 +615,29 @@ CONTAINS
          call pio_write_darray(file, state_desc_zm, iodesc3d, tmp3D, ierr)
          
          do i=begchunk,endchunk
-            tmp3D(:ncol(i),:,i) = phys_state(i)%pint(:ncol(i),:) 
+            tmp3Dp(:ncol(i),:,i) = phys_state(i)%pint(:ncol(i),:) 
          end do
-         call pio_write_darray(file, state_desc_pint, iodesc3d, tmp3D, ierr)
+         call pio_write_darray(file, state_desc_pint, iodesc3dp, tmp3Dp, ierr)
          
          do i=begchunk,endchunk
-            tmp3D(:ncol(i),:,i) = phys_state(i)%pintdry(:ncol(i),:) 
+            tmp3Dp(:ncol(i),:,i) = phys_state(i)%pintdry(:ncol(i),:) 
          end do
-         call pio_write_darray(file, state_desc_pintdry, iodesc3d, tmp3D, ierr)
+         call pio_write_darray(file, state_desc_pintdry, iodesc3dp, tmp3Dp, ierr)
          
          do i=begchunk,endchunk
-            tmp3D(:ncol(i),:,i) = phys_state(i)%lnpint(:ncol(i),:) 
+            tmp3Dp(:ncol(i),:,i) = phys_state(i)%lnpint(:ncol(i),:) 
          end do
-         call pio_write_darray(file, state_desc_lnpint, iodesc3d, tmp3D, ierr)
+         call pio_write_darray(file, state_desc_lnpint, iodesc3dp, tmp3Dp, ierr)
          
          do i=begchunk,endchunk
-            tmp3D(:ncol(i),:,i) = phys_state(i)%lnpintdry(:ncol(i),:) 
+            tmp3Dp(:ncol(i),:,i) = phys_state(i)%lnpintdry(:ncol(i),:) 
          end do
-         call pio_write_darray(file, state_desc_lnpintdry, iodesc3d, tmp3D, ierr)
+         call pio_write_darray(file, state_desc_lnpintdry, iodesc3dp, tmp3Dp, ierr)
          
          do i=begchunk,endchunk
-            tmp3D(:ncol(i),:,i) = phys_state(i)%zi(:ncol(i),:) 
+            tmp3Dp(:ncol(i),:,i) = phys_state(i)%zi(:ncol(i),:) 
          end do
-         call pio_write_darray(file, state_desc_zi, iodesc3d, tmp3D, ierr)
+         call pio_write_darray(file, state_desc_zi, iodesc3dp, tmp3Dp, ierr)
 
       end if
 
