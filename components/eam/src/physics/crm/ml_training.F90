@@ -102,11 +102,11 @@ CONTAINS
 
       character(len=8)     :: num      ! used for writing numeric charaters (i.e. constituent index)
       character(len=4)     :: fspec    ! string used after ".eam." in file name 
-      logical              :: add_pbuf       = .false.
-      logical              :: add_phys_state = .false.
-      logical              :: add_phys_tend  = .false.
-      logical              :: add_cam_in     = .false.
-      logical              :: add_cam_out    = .false.
+      logical              :: add_pbuf
+      logical              :: add_phys_state
+      logical              :: add_phys_tend
+      logical              :: add_cam_in
+      logical              :: add_cam_out
 
       ! file variable descriptions
 
@@ -321,6 +321,11 @@ CONTAINS
       !-------------------------------------------------------------------------
       ! Initialize stuff
       !-------------------------------------------------------------------------
+      add_pbuf       = .false.
+      add_phys_state = .false.
+      add_phys_tend  = .false.
+      add_cam_in     = .false.
+      add_cam_out    = .false.
       if (mode==1) then
          fspec = 'mli'
          add_pbuf        = .true.
@@ -343,7 +348,6 @@ CONTAINS
       call cam_grid_dimensions(grid_id, gdims(1:2), nhdims)
       if (nhdims==1) then
          call cam_grid_get_decomp(grid_id, (/pcols,endchunk-begchunk+1/), (/gdims(1)/),      pio_double, iodesc2d)
-         !call cam_grid_get_decomp(grid_id, (/pcols,endchunk-begchunk+1/), (/gdims(1),pver/), pio_double, iodesc3d)
          call cam_grid_get_decomp(grid_id, (/pcols,pver,endchunk-begchunk+1/), (/gdims(1),pver/), pio_double, iodesc3d)
          call cam_grid_get_decomp(grid_id, (/pcols,pverp,endchunk-begchunk+1/), (/gdims(1),pverp/), pio_double, iodesc3dp)
       end if
