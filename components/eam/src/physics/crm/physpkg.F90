@@ -136,8 +136,8 @@ subroutine phys_register
   call pbuf_add_field('FRACIS',         'physpkg',dtype_r8,(/pcols,pver,pcnst/),dummy)
   call pbuf_add_field('MMF_CLEAR_RH',   'physpkg',dtype_r8,(/pcols,pver/),mmf_clear_rh_idx)
 #ifdef MMF_ML_TRAINING
-  call pbuf_add_field('SOLIN',          'physpkg',dtype_r8,(/pcols/), dummy)
-  call pbuf_add_field('COSZRS',         'physpkg',dtype_r8,(/pcols/), dummy)
+  call pbuf_add_field('SOLIN',          'global',dtype_r8,(/pcols/), dummy)
+  call pbuf_add_field('COSZRS',         'global',dtype_r8,(/pcols/), dummy)
 #endif
 
   ! check energy package
