@@ -111,72 +111,72 @@ CONTAINS
       ! file variable descriptions
 
       ! cam_out
-      ! [] tbot(:)     ! bot level temperature
-      ! [] zbot(:)     ! bot level height above surface
-      ! [] ubot(:)     ! bot level u wind
-      ! [] vbot(:)     ! bot level v wind
-      ! [] qbot(:,:)   ! bot level specific humidity
-      ! [] pbot(:)     ! bot level pressure
-      ! [] rho(:)      ! bot level density
-      ! [] netsw(:)    !
-      ! [] flwds(:)    !
-      ! [] precsc(:)   !
-      ! [] precsl(:)   !
-      ! [] precc(:)    !
-      ! [] precl(:)    !
-      ! [] soll(:)     !
-      ! [] sols(:)     !
-      ! [] solld(:)    !
-      ! [] solsd(:)    !
-      ! [] thbot(:)    !
-      ! [] co2prog(:)  ! prognostic co2
-      ! [] co2diag(:)  ! diagnostic co2
-      ! [] psl(:)      ! sea level pressure
-      ! [] bcphiwet(:) ! wet deposition of hydrophilic black carbon
-      ! [] bcphidry(:) ! dry deposition of hydrophilic black carbon
-      ! [] bcphodry(:) ! dry deposition of hydrophobic black carbon
-      ! [] ocphiwet(:) ! wet deposition of hydrophilic organic carbon
-      ! [] ocphidry(:) ! dry deposition of hydrophilic organic carbon
-      ! [] ocphodry(:) ! dry deposition of hydrophobic organic carbon
-      ! [] dstwet1(:)  ! wet deposition of dust (bin1)
-      ! [] dstdry1(:)  ! dry deposition of dust (bin1)
-      ! [] dstwet2(:)  ! wet deposition of dust (bin2)
-      ! [] dstdry2(:)  ! dry deposition of dust (bin2)
-      ! [] dstwet3(:)  ! wet deposition of dust (bin3)
-      ! [] dstdry3(:)  ! dry deposition of dust (bin3)
-      ! [] dstwet4(:)  ! wet deposition of dust (bin4)
-      ! [] dstdry4(:)  ! dry deposition of dust (bin4)
-      ! [] wsresp(:)   ! first-order response of low-level wind to surface fluxes
-      ! [] tau_est(:)  ! stress estimated to be in equilibrium with ubot/vbot
-      ! [] ugust(:)    ! gustiness value
-      ! [] uovern(:)       ! ratio of wind speed/brunt vaisalla frequency
+      ! [0] tbot(:)     ! bot level temperature
+      ! [0] zbot(:)     ! bot level height above surface
+      ! [0] ubot(:)     ! bot level u wind
+      ! [0] vbot(:)     ! bot level v wind
+      ! [0] qbot(:,:)   ! bot level specific humidity
+      ! [0] pbot(:)     ! bot level pressure
+      ! [0] rho(:)      ! bot level density
+      ! [1] netsw(:)    !
+      ! [1] flwds(:)    !
+      ! [1] precsc(:)   !
+      ! [0] precsl(:)   !
+      ! [1] precc(:)    !
+      ! [0] precl(:)    !
+      ! [1] soll(:)     !
+      ! [1] sols(:)     !
+      ! [1] solld(:)    !
+      ! [1] solsd(:)    !
+      ! [0] thbot(:)    !
+      ! [0] co2prog(:)  ! prognostic co2
+      ! [0] co2diag(:)  ! diagnostic co2
+      ! [0] psl(:)      ! sea level pressure
+      ! [0] bcphiwet(:) ! wet deposition of hydrophilic black carbon
+      ! [0] bcphidry(:) ! dry deposition of hydrophilic black carbon
+      ! [0] bcphodry(:) ! dry deposition of hydrophobic black carbon
+      ! [0] ocphiwet(:) ! wet deposition of hydrophilic organic carbon
+      ! [0] ocphidry(:) ! dry deposition of hydrophilic organic carbon
+      ! [0] ocphodry(:) ! dry deposition of hydrophobic organic carbon
+      ! [0] dstwet1(:)  ! wet deposition of dust (bin1)
+      ! [0] dstdry1(:)  ! dry deposition of dust (bin1)
+      ! [0] dstwet2(:)  ! wet deposition of dust (bin2)
+      ! [0] dstdry2(:)  ! dry deposition of dust (bin2)
+      ! [0] dstwet3(:)  ! wet deposition of dust (bin3)
+      ! [0] dstdry3(:)  ! dry deposition of dust (bin3)
+      ! [0] dstwet4(:)  ! wet deposition of dust (bin4)
+      ! [0] dstdry4(:)  ! dry deposition of dust (bin4)
+      ! [0] wsresp(:)   ! first-order response of low-level wind to surface fluxes
+      ! [0] tau_est(:)  ! stress estimated to be in equilibrium with ubot/vbot
+      ! [0] ugust(:)    ! gustiness value
+      ! [0] uovern(:)       ! ratio of wind speed/brunt vaisalla frequency
       ! type(var_desc_t)     :: desc_trefmxav
       ! type(var_desc_t)     :: desc_trefmnav
-      type(var_desc_t)     :: desc_tbot
-      type(var_desc_t)     :: desc_zbot
-      type(var_desc_t)     :: desc_ubot
-      type(var_desc_t)     :: desc_vbot
-      type(var_desc_t)     :: desc_qbot(pcnst)
-      type(var_desc_t)     :: desc_pbot
-      type(var_desc_t)     :: desc_rho
+      ! type(var_desc_t)     :: desc_tbot
+      ! type(var_desc_t)     :: desc_zbot
+      ! type(var_desc_t)     :: desc_ubot
+      ! type(var_desc_t)     :: desc_vbot
+      ! type(var_desc_t)     :: desc_qbot(pcnst)
+      ! type(var_desc_t)     :: desc_pbot
+      ! type(var_desc_t)     :: desc_rho
       type(var_desc_t)     :: desc_netsw
       type(var_desc_t)     :: desc_flwds
       type(var_desc_t)     :: desc_precsc
-      type(var_desc_t)     :: desc_precsl
+      ! type(var_desc_t)     :: desc_precsl
       type(var_desc_t)     :: desc_precc
-      type(var_desc_t)     :: desc_precl
+      ! type(var_desc_t)     :: desc_precl
       type(var_desc_t)     :: desc_solld
       type(var_desc_t)     :: desc_sols
       type(var_desc_t)     :: desc_soll
       type(var_desc_t)     :: desc_solsd
-      type(var_desc_t)     :: desc_thbot
-      type(var_desc_t)     :: desc_psl
-      type(var_desc_t)     :: desc_wsresp
-      type(var_desc_t)     :: desc_tau_est
-      type(var_desc_t)     :: desc_ugust
-      type(var_desc_t)     :: desc_uovern
-      type(var_desc_t)     :: desc_co2prog
-      type(var_desc_t)     :: desc_co2diag
+      ! type(var_desc_t)     :: desc_thbot
+      ! type(var_desc_t)     :: desc_psl
+      ! type(var_desc_t)     :: desc_wsresp
+      ! type(var_desc_t)     :: desc_tau_est
+      ! type(var_desc_t)     :: desc_ugust
+      ! type(var_desc_t)     :: desc_uovern
+      ! type(var_desc_t)     :: desc_co2prog
+      ! type(var_desc_t)     :: desc_co2diag
       !type(var_desc_t)     :: desc_bcphidry ! surface deposition flux are not used when atm_dep_flux=.false. in atm_in
       !type(var_desc_t)     :: desc_bcphodry
       !type(var_desc_t)     :: desc_ocphidry
@@ -193,27 +193,28 @@ CONTAINS
       !type(var_desc_t)     :: desc_dstwet4
 
       ! physics_state
-      ! [] ps(:)        ! surface pressure
-      ! [] psdry(:)     ! dry surface pressure
-      ! [] phis(:)      ! surface geopotential
-      ! [] ulat(:)      ! unique latitudes  (radians)
-      ! [] ulon(:)      ! unique longitudes (radians)
-      ! [] t(:,:)       ! temperature (K)
-      ! [] u(:,:)       ! zonal wind (m/s)
-      ! [] v(:,:)       ! meridional wind (m/s)
-      ! [] s(:,:)       ! dry static energy
-      ! [] omega(:,:)   ! vertical pressure velocity (Pa/s)
-      ! [] pmid(:,:)    ! midpoint pressure (Pa)
-      ! [] pmiddry(:,:) ! midpoint pressure dry (Pa)
-      ! [] pdel(:,:)    ! layer thickness (Pa)
-      ! [] pdeldry(:,:) ! layer thickness dry (Pa)
-      ! [] rpdel(:,:)   ! reciprocal of layer thickness (Pa)
-      ! [] rpdeldry(:,:)! recipricol layer thickness dry (Pa)
-      ! [] lnpmid(:,:)  ! ln(pmid)
-      ! [] lnpmiddry(:,:)! log midpoint pressure dry (Pa)
-      ! [] exner(:,:)   ! inverse exner function w.r.t. surface pressure (ps/p)^(R/cp)
-      ! [] zm(:,:)      ! geopotential height above surface at midpoints (m)
-      ! [] q (:,:,:)    ! constituent mixing ratio (kg/kg moist or dry air depending on type)
+      ! [0] ps(:)        ! surface pressure
+      ! [0] psdry(:)     ! dry surface pressure
+      ! [0] phis(:)      ! surface geopotential
+      ! [0] ulat(:)      ! unique latitudes  (radians)
+      ! [0] ulon(:)      ! unique longitudes (radians)
+      ! [1] t(:,:)       ! temperature (K)
+      ! [1] u(:,:)       ! zonal wind (m/s)
+      ! [1] v(:,:)       ! meridional wind (m/s)
+      ! [0] s(:,:)       ! dry static energy
+      ! [0] omega(:,:)   ! vertical pressure velocity (Pa/s)
+      ! [1] pmid(:,:)    ! midpoint pressure (Pa)
+      ! [0] pmiddry(:,:) ! midpoint pressure dry (Pa)
+      ! [0] pdel(:,:)    ! layer thickness (Pa)
+      ! [0] pdeldry(:,:) ! layer thickness dry (Pa)
+      ! [0] rpdel(:,:)   ! reciprocal of layer thickness (Pa)
+      ! [0] rpdeldry(:,:)! recipricol layer thickness dry (Pa)
+      ! [0] lnpmid(:,:)  ! ln(pmid)
+      ! [0] lnpmiddry(:,:)! log midpoint pressure dry (Pa)
+      ! [0] exner(:,:)   ! inverse exner function w.r.t. surface pressure (ps/p)^(R/cp)
+      ! [0] zm(:,:)      ! geopotential height above surface at midpoints (m)
+      ! [1] q (:,:,:)    ! constituent mixing ratio (kg/kg moist or dry air depending on type)
+      !                  ! Only print out q000{1,2,3} that accounts for Q, CLDLIQ, and CLDICE.
       !
       ! (Diagnostic, grid, carbon-flux variables are omitted:
       !  pint, pintdry, lnpint, lnpintdry, zi,
@@ -222,112 +223,112 @@ CONTAINS
       !  c_iflx_sfc, c_iflx_air, c_iflx_sff, c_iflx_lnd, c_iflx_ocn
       ! )
 
-      type(var_desc_t)     :: state_desc_ps
-      type(var_desc_t)     :: state_desc_psdry
-      type(var_desc_t)     :: state_desc_phis
+      ! type(var_desc_t)     :: state_desc_ps
+      ! type(var_desc_t)     :: state_desc_psdry
+      ! type(var_desc_t)     :: state_desc_phis
       type(var_desc_t)     :: state_desc_t
       type(var_desc_t)     :: state_desc_u
       type(var_desc_t)     :: state_desc_v
       type(var_desc_t)     :: state_desc_s
-      type(var_desc_t)     :: state_desc_omega
+      ! type(var_desc_t)     :: state_desc_omega
       type(var_desc_t)     :: state_desc_pmid
-      type(var_desc_t)     :: state_desc_pmiddry
-      type(var_desc_t)     :: state_desc_pdel
-      type(var_desc_t)     :: state_desc_pdeldry
-      type(var_desc_t)     :: state_desc_rpdel
-      type(var_desc_t)     :: state_desc_rpdeldry
-      type(var_desc_t)     :: state_desc_lnpmid
-      type(var_desc_t)     :: state_desc_lnpmiddry
-      type(var_desc_t)     :: state_desc_exner
-      type(var_desc_t)     :: state_desc_zm
-      type(var_desc_t)     :: state_desc_q(pcnst)
-      type(var_desc_t)     :: state_desc_pint
-      type(var_desc_t)     :: state_desc_pintdry
-      type(var_desc_t)     :: state_desc_lnpint
-      type(var_desc_t)     :: state_desc_lnpintdry
-      type(var_desc_t)     :: state_desc_zi
+      ! type(var_desc_t)     :: state_desc_pmiddry
+      ! type(var_desc_t)     :: state_desc_pdel
+      ! type(var_desc_t)     :: state_desc_pdeldry
+      ! type(var_desc_t)     :: state_desc_rpdel
+      ! type(var_desc_t)     :: state_desc_rpdeldry
+      ! type(var_desc_t)     :: state_desc_lnpmid
+      ! type(var_desc_t)     :: state_desc_lnpmiddry
+      ! type(var_desc_t)     :: state_desc_exner
+      ! type(var_desc_t)     :: state_desc_zm
+      type(var_desc_t)     :: state_desc_q(3) !state_desc_q(pcnst)
+      ! type(var_desc_t)     :: state_desc_pint
+      ! type(var_desc_t)     :: state_desc_pintdry
+      ! type(var_desc_t)     :: state_desc_lnpint
+      ! type(var_desc_t)     :: state_desc_lnpintdry
+      ! type(var_desc_t)     :: state_desc_zi
 
       ! physics_tend
-      ! [] dtdt(:,:)
-      ! [] dudt(:,:)
-      ! [] dvdt(:,:)
-      ! [] flx_net(:)
-      ! [] te_tnd(:) ! cumulative boundary flux of total energy
-      ! [] tw_tnd(:) ! cumulative boundary flux of total water
-      type(var_desc_t)     :: tend_desc_dtdt
-      type(var_desc_t)     :: tend_desc_dudt
-      type(var_desc_t)     :: tend_desc_dvdt
-      type(var_desc_t)     :: tend_desc_flx_net
-      type(var_desc_t)     :: tend_desc_te_tnd
-      type(var_desc_t)     :: tend_desc_tw_tnd
+      ! [0] dtdt(:,:)
+      ! [0] dudt(:,:)
+      ! [0] dvdt(:,:)
+      ! [0] flx_net(:)
+      ! [0] te_tnd(:) ! cumulative boundary flux of total energy
+      ! [0] tw_tnd(:) ! cumulative boundary flux of total water
+      ! type(var_desc_t)     :: tend_desc_dtdt
+      ! type(var_desc_t)     :: tend_desc_dudt
+      ! type(var_desc_t)     :: tend_desc_dvdt
+      ! type(var_desc_t)     :: tend_desc_flx_net
+      ! type(var_desc_t)     :: tend_desc_te_tnd
+      ! type(var_desc_t)     :: tend_desc_tw_tnd
       
       ! cam_in
-      ! [] asdir(:)      ! albedo: shortwave, direct
-      ! [] asdif(:)      ! albedo: shortwave, diffuse
-      ! [] aldir(:)      ! albedo: longwave, direct
-      ! [] aldif(:)      ! albedo: longwave, diffuse
-      ! [] lwup(:)       ! longwave up radiative flux
-      ! [] lhf(:)        ! latent heat flux
-      ! [] shf(:)        ! sensible heat flux
-      ! [] h2otemp(:)    ! water temperature heat flux from ocean
-      ! [] wsx(:)        ! surface u-stress (N)
-      ! [] wsy(:)        ! surface v-stress (N)
-      ! [] tref(:)       ! ref height surface air temp
-      ! [] qref(:)       ! ref height specific humidity
-      ! [] u10(:)        ! 10m wind speed
-      ! [] ts(:)         ! merged surface temp
-      ! [] sst(:)        ! sea surface temp
-      ! [] snowhland(:)  ! snow depth (liquid water equivalent) over land
-      ! [] snowhice(:)   ! snow depth over ice
-      ! [] fco2_lnd(:)   ! co2 flux from lnd
-      ! [] fco2_ocn(:)   ! co2 flux from ocn
-      ! [] fdms(:)       ! dms flux
-      ! [] landfrac(:)   ! land area fraction
-      ! [] icefrac(:)    ! sea-ice areal fraction
-      ! [] ocnfrac(:)    ! ocean areal fraction
-      ! [] ram1       !aerodynamical resistance (s/m) (pcols)
-      ! [] fv         !friction velocity (m/s) (pcols)
-      ! [] soilw      !volumetric soil water (m3/m3)
-      ! [] cflx(:,:)     ! constituent flux (emissions), dims: [:,pcnst]
-      ! [] ustar(:)      ! atm/ocn saved version of ustar
-      ! [] re(:)         ! atm/ocn saved version of re
-      ! [] ssq(:)        ! atm/ocn saved version of ssq
-      ! [] depvel(:,:)   ! deposition velocities, dims: [:,n_drydep]
-      ! [] dstflx(:,:)   ! dust fluxes, dims: [:,4] ! 4 bins from surface model
-      ! [] meganflx(:,:) ! MEGAN fluxes, dims: [:,shr_megan_mechcomps_n]
+      ! [1] asdir(:)      ! albedo: shortwave, direct
+      ! [1] asdif(:)      ! albedo: shortwave, diffuse
+      ! [1] aldir(:)      ! albedo: longwave, direct
+      ! [1] aldif(:)      ! albedo: longwave, diffuse
+      ! [1] lwup(:)       ! longwave up radiative flux
+      ! [0] lhf(:)        ! latent heat flux
+      ! [0] shf(:)        ! sensible heat flux
+      ! [0] h2otemp(:)    ! water temperature heat flux from ocean
+      ! [0] wsx(:)        ! surface u-stress (N)
+      ! [0] wsy(:)        ! surface v-stress (N)
+      ! [0] tref(:)       ! ref height surface air temp
+      ! [0] qref(:)       ! ref height specific humidity
+      ! [0] u10(:)        ! 10m wind speed
+      ! [0] ts(:)         ! merged surface temp
+      ! [0] sst(:)        ! sea surface temp
+      ! [1] snowhland(:)  ! snow depth (liquid water equivalent) over land
+      ! [1] snowhice(:)   ! snow depth over ice
+      ! [0] fco2_lnd(:)   ! co2 flux from lnd
+      ! [0] fco2_ocn(:)   ! co2 flux from ocn
+      ! [0] fdms(:)       ! dms flux
+      ! [1] landfrac(:)   ! land area fraction
+      ! [1] icefrac(:)    ! sea-ice areal fraction
+      ! [1] ocnfrac(:)    ! ocean areal fraction
+      ! [0] ram1       !aerodynamical resistance (s/m) (pcols)
+      ! [0] fv         !friction velocity (m/s) (pcols)
+      ! [0] soilw      !volumetric soil water (m3/m3)
+      ! [0] cflx(:,:)     ! constituent flux (emissions), dims: [:,pcnst]
+      ! [0] ustar(:)      ! atm/ocn saved version of ustar
+      ! [0] re(:)         ! atm/ocn saved version of re
+      ! [0] ssq(:)        ! atm/ocn saved version of ssq
+      ! [0] depvel(:,:)   ! deposition velocities, dims: [:,n_drydep]
+      ! [0] dstflx(:,:)   ! dust fluxes, dims: [:,4] ! 4 bins from surface model
+      ! [0] meganflx(:,:) ! MEGAN fluxes, dims: [:,shr_megan_mechcomps_n]
       type(var_desc_t)     :: desc_asdir
       type(var_desc_t)     :: desc_asdif
       type(var_desc_t)     :: desc_aldir
       type(var_desc_t)     :: desc_aldif
       type(var_desc_t)     :: desc_lwup
-      type(var_desc_t)     :: desc_lhf
-      type(var_desc_t)     :: desc_shf
-      type(var_desc_t)     :: desc_h2otemp
-      type(var_desc_t)     :: desc_wsx
-      type(var_desc_t)     :: desc_wsy
-      type(var_desc_t)     :: desc_tref
-      type(var_desc_t)     :: desc_qref
-      type(var_desc_t)     :: desc_u10
-      type(var_desc_t)     :: desc_ts
-      type(var_desc_t)     :: desc_sst
+      ! type(var_desc_t)     :: desc_lhf
+      ! type(var_desc_t)     :: desc_shf
+      ! type(var_desc_t)     :: desc_h2otemp
+      ! type(var_desc_t)     :: desc_wsx
+      ! type(var_desc_t)     :: desc_wsy
+      ! type(var_desc_t)     :: desc_tref
+      ! type(var_desc_t)     :: desc_qref
+      ! type(var_desc_t)     :: desc_u10
+      ! type(var_desc_t)     :: desc_ts
+      ! type(var_desc_t)     :: desc_sst
       type(var_desc_t)     :: desc_snowhland
       type(var_desc_t)     :: desc_snowhice
-      type(var_desc_t)     :: desc_fco2_lnd
-      type(var_desc_t)     :: desc_fco2_ocn
-      type(var_desc_t)     :: desc_fdms
+      ! type(var_desc_t)     :: desc_fco2_lnd
+      ! type(var_desc_t)     :: desc_fco2_ocn
+      ! type(var_desc_t)     :: desc_fdms
       type(var_desc_t)     :: desc_landfrac
       type(var_desc_t)     :: desc_icefrac
       type(var_desc_t)     :: desc_ocnfrac
-      type(var_desc_t)     :: desc_ram1
-      type(var_desc_t)     :: desc_fv
+      ! type(var_desc_t)     :: desc_ram1
+      ! type(var_desc_t)     :: desc_fv
       ! type(var_desc_t)     :: desc_soilw ! MOZART
-      type(var_desc_t)     :: desc_cflx(pcnst)
-      type(var_desc_t)     :: desc_ustar
-      type(var_desc_t)     :: desc_re
-      type(var_desc_t)     :: desc_ssq
-      type(var_desc_t)     :: desc_depvel(n_drydep)
-      type(var_desc_t)     :: desc_dstflx(4)
-      type(var_desc_t)     :: desc_meganflx(shr_megan_mechcomps_n)
+      ! type(var_desc_t)     :: desc_cflx(pcnst)
+      ! type(var_desc_t)     :: desc_ustar
+      ! type(var_desc_t)     :: desc_re
+      ! type(var_desc_t)     :: desc_ssq
+      ! type(var_desc_t)     :: desc_depvel(n_drydep)
+      ! type(var_desc_t)     :: desc_dstflx(4)
+      ! type(var_desc_t)     :: desc_meganflx(shr_megan_mechcomps_n)
       !-------------------------------------------------------------------------
       ! Initialize stuff
       !-------------------------------------------------------------------------
@@ -341,18 +342,11 @@ CONTAINS
          add_pbuf        = .true.
          add_phys_state  = .true.
          add_cam_in      = .true.
-         !! SY test only
-         add_cam_out     = .true.
-         add_phys_tend   = .true.
       end if
       if (mode==2) then
          fspec = 'mlo'
-         add_pbuf       = .true.
          add_phys_state = .true.
-         add_phys_tend  = .true.
          add_cam_out    = .true.
-         !! SY test only
-         add_cam_in     = .true.
       end if
 
       do i=begchunk,endchunk
@@ -376,7 +370,8 @@ CONTAINS
 
       call cam_pio_def_dim(file, 'lev',   pver,  pver_id,  existOK=.true.)
       call cam_pio_def_dim(file, 'ilev',  pverp, pverp_id, existOK=.true.)
-      call cam_pio_def_dim(file, 'pcnst', pcnst, pcnst_id, existOK=.true.)
+      !call cam_pio_def_dim(file, 'pcnst', pcnst, pcnst_id, existOK=.true.)
+      call cam_pio_def_dim(file, 'pcnst', 3, pcnst_id, existOK=.true.)
 
       call timemgr_init_restart(File)
 
@@ -388,10 +383,10 @@ CONTAINS
       !-------------------------------------------------------------------------
       ! define physics state variables
       if (add_phys_state) then
-         ierr = pio_def_var(file, 'state_ps',        pio_double, dimids_hrz, state_desc_ps)
-         ierr = pio_def_var(file, 'state_psdry',     pio_double, dimids_hrz, state_desc_psdry)
-         ierr = pio_def_var(file, 'state_phis',        pio_double, dimids_hrz, state_desc_phis)
-         do m=1,pcnst
+         ! ierr = pio_def_var(file, 'state_ps',        pio_double, dimids_hrz, state_desc_ps)
+         ! ierr = pio_def_var(file, 'state_psdry',     pio_double, dimids_hrz, state_desc_psdry)
+         ! ierr = pio_def_var(file, 'state_phis',        pio_double, dimids_hrz, state_desc_phis)
+         do m=1,3 !m=1,pcnst
             write(num,'(i4.4)') m
             ierr = pio_def_var(file, 'state_q'//num, pio_double, dimids_3D1, state_desc_q(m))
          end do
@@ -405,67 +400,69 @@ CONTAINS
          !! SY
          ierr = pio_def_var(file, 'state_u',         pio_double, dimids_3D1, state_desc_u)
          ierr = pio_def_var(file, 'state_v',         pio_double, dimids_3D1, state_desc_v)
-         ierr = pio_def_var(file, 'state_s',         pio_double, dimids_3D1, state_desc_s)
-         ierr = pio_def_var(file, 'state_omega',     pio_double, dimids_3D1, state_desc_omega)
-         ierr = pio_def_var(file, 'state_pmid',      pio_double, dimids_3D1, state_desc_pmid)
-         ierr = pio_def_var(file, 'state_pmiddry',   pio_double, dimids_3D1, state_desc_pmiddry)
-         ierr = pio_def_var(file, 'state_pdel',      pio_double, dimids_3D1, state_desc_pdel)
-         ierr = pio_def_var(file, 'state_pdeldry',   pio_double, dimids_3D1, state_desc_pdeldry)
-         ierr = pio_def_var(file, 'state_rpdel',     pio_double, dimids_3D1, state_desc_rpdel)
-         ierr = pio_def_var(file, 'state_rpdeldry',  pio_double, dimids_3D1, state_desc_rpdeldry)
-         ierr = pio_def_var(file, 'state_lnpmid',    pio_double, dimids_3D1, state_desc_lnpmid)
-         ierr = pio_def_var(file, 'state_lnpmiddry', pio_double, dimids_3D1, state_desc_lnpmiddry)
-         ierr = pio_def_var(file, 'state_exner',     pio_double, dimids_3D1, state_desc_exner)
-         ierr = pio_def_var(file, 'state_zm',        pio_double, dimids_3D1, state_desc_zm)
-         ierr = pio_def_var(file, 'state_pint',      pio_double, dimids_3D2, state_desc_pint)
-         ierr = pio_def_var(file, 'state_pintdry',   pio_double, dimids_3D2, state_desc_pintdry)
-         ierr = pio_def_var(file, 'state_lnpint',    pio_double, dimids_3D2, state_desc_lnpint)
-         ierr = pio_def_var(file, 'state_lnpintdry', pio_double, dimids_3D2, state_desc_lnpintdry)
-         ierr = pio_def_var(file, 'state_zi',        pio_double, dimids_3D2, state_desc_zi)
+         ! ierr = pio_def_var(file, 'state_s',         pio_double, dimids_3D1, state_desc_s)
+         ! ierr = pio_def_var(file, 'state_omega',     pio_double, dimids_3D1, state_desc_omega)
+         if (mode==1) then
+           ierr = pio_def_var(file, 'state_pmid',      pio_double, dimids_3D1, state_desc_pmid)
+         end if
+         ! ierr = pio_def_var(file, 'state_pmiddry',   pio_double, dimids_3D1, state_desc_pmiddry)
+         ! ierr = pio_def_var(file, 'state_pdel',      pio_double, dimids_3D1, state_desc_pdel)
+         ! ierr = pio_def_var(file, 'state_pdeldry',   pio_double, dimids_3D1, state_desc_pdeldry)
+         ! ierr = pio_def_var(file, 'state_rpdel',     pio_double, dimids_3D1, state_desc_rpdel)
+         ! ierr = pio_def_var(file, 'state_rpdeldry',  pio_double, dimids_3D1, state_desc_rpdeldry)
+         ! ierr = pio_def_var(file, 'state_lnpmid',    pio_double, dimids_3D1, state_desc_lnpmid)
+         ! ierr = pio_def_var(file, 'state_lnpmiddry', pio_double, dimids_3D1, state_desc_lnpmiddry)
+         ! ierr = pio_def_var(file, 'state_exner',     pio_double, dimids_3D1, state_desc_exner)
+         ! ierr = pio_def_var(file, 'state_zm',        pio_double, dimids_3D1, state_desc_zm)
+         ! ierr = pio_def_var(file, 'state_pint',      pio_double, dimids_3D2, state_desc_pint)
+         ! ierr = pio_def_var(file, 'state_pintdry',   pio_double, dimids_3D2, state_desc_pintdry)
+         ! ierr = pio_def_var(file, 'state_lnpint',    pio_double, dimids_3D2, state_desc_lnpint)
+         ! ierr = pio_def_var(file, 'state_lnpintdry', pio_double, dimids_3D2, state_desc_lnpintdry)
+         ! ierr = pio_def_var(file, 'state_zi',        pio_double, dimids_3D2, state_desc_zi)
       end if
 
       !-------------------------------------------------------------------------
       ! define physics tendency variables
       if (add_phys_tend) then
-         ierr = pio_def_var(file, 'tend_dtdt',   pio_double, dimids_3D1, tend_desc_dtdt )
-         ierr = pio_def_var(file, 'tend_dudt',   pio_double, dimids_3D1, tend_desc_dudt )
-         ierr = pio_def_var(file, 'tend_dvdt',   pio_double, dimids_3D1, tend_desc_dvdt)
-         ierr = pio_def_var(file, 'tend_flx_net',pio_double, dimids_hrz, tend_desc_flx_net)
-         ierr = pio_def_var(file, 'tend_te_tnd', pio_double, dimids_hrz, tend_desc_te_tnd) ! cumulative boundary flux of total energy
-         ierr = pio_def_var(file, 'tend_tw_tnd', pio_double, dimids_hrz, tend_desc_tw_tnd) ! cumulative boundary flux of total water
+         ! ierr = pio_def_var(file, 'tend_dtdt',   pio_double, dimids_3D1, tend_desc_dtdt )
+         ! ierr = pio_def_var(file, 'tend_dudt',   pio_double, dimids_3D1, tend_desc_dudt )
+         ! ierr = pio_def_var(file, 'tend_dvdt',   pio_double, dimids_3D1, tend_desc_dvdt)
+         ! ierr = pio_def_var(file, 'tend_flx_net',pio_double, dimids_hrz, tend_desc_flx_net)
+         ! ierr = pio_def_var(file, 'tend_te_tnd', pio_double, dimids_hrz, tend_desc_te_tnd) ! cumulative boundary flux of total energy
+         ! ierr = pio_def_var(file, 'tend_tw_tnd', pio_double, dimids_hrz, tend_desc_tw_tnd) ! cumulative boundary flux of total water
       end if
 
       !-------------------------------------------------------------------------
       ! define cam_out variables
       if (add_cam_out) then
-         do m=1,pcnst
-            write(num,'(i4.4)') m
-            ierr = pio_def_var(file, 'cam_out_QBOT'//num, pio_double, dimids_hrz, desc_qbot(m))
-         end do
-         ierr = pio_def_var(file, 'cam_out_TBOT', pio_double, dimids_hrz, desc_tbot )
-         ierr = pio_def_var(file, 'cam_out_ZBOT', pio_double, dimids_hrz, desc_zbot )
-         ierr = pio_def_var(file, 'cam_out_UBOT', pio_double, dimids_hrz, desc_ubot )
-         ierr = pio_def_var(file, 'cam_out_VBOT', pio_double, dimids_hrz, desc_vbot )
-         ierr = pio_def_var(file, 'cam_out_PBOT', pio_double, dimids_hrz, desc_pbot )
-         ierr = pio_def_var(file, 'cam_out_RHO', pio_double, dimids_hrz, desc_rho )
+         ! do m=1,pcnst
+         !    write(num,'(i4.4)') m
+         !    ierr = pio_def_var(file, 'cam_out_QBOT'//num, pio_double, dimids_hrz, desc_qbot(m))
+         ! end do
+         ! ierr = pio_def_var(file, 'cam_out_TBOT', pio_double, dimids_hrz, desc_tbot )
+         ! ierr = pio_def_var(file, 'cam_out_ZBOT', pio_double, dimids_hrz, desc_zbot )
+         ! ierr = pio_def_var(file, 'cam_out_UBOT', pio_double, dimids_hrz, desc_ubot )
+         ! ierr = pio_def_var(file, 'cam_out_VBOT', pio_double, dimids_hrz, desc_vbot )
+         ! ierr = pio_def_var(file, 'cam_out_PBOT', pio_double, dimids_hrz, desc_pbot )
+         ! ierr = pio_def_var(file, 'cam_out_RHO', pio_double, dimids_hrz, desc_rho )
          ierr = pio_def_var(file, 'cam_out_NETSW', pio_double, dimids_hrz, desc_netsw )
          ierr = pio_def_var(file, 'cam_out_FLWDS', pio_double, dimids_hrz, desc_flwds )
          ierr = pio_def_var(file, 'cam_out_PRECSC', pio_double, dimids_hrz, desc_precsc )
-         ierr = pio_def_var(file, 'cam_out_PRECSL', pio_double, dimids_hrz, desc_precsl )
+         ! ierr = pio_def_var(file, 'cam_out_PRECSL', pio_double, dimids_hrz, desc_precsl )
          ierr = pio_def_var(file, 'cam_out_PRECC', pio_double, dimids_hrz, desc_precc )
-         ierr = pio_def_var(file, 'cam_out_PRECL', pio_double, dimids_hrz, desc_precl )
+         ! ierr = pio_def_var(file, 'cam_out_PRECL', pio_double, dimids_hrz, desc_precl )
          ierr = pio_def_var(file, 'cam_out_SOLS',  pio_double, dimids_hrz, desc_sols )
          ierr = pio_def_var(file, 'cam_out_SOLL',  pio_double, dimids_hrz, desc_soll )
          ierr = pio_def_var(file, 'cam_out_SOLSD', pio_double, dimids_hrz, desc_solsd )
          ierr = pio_def_var(file, 'cam_out_SOLLD', pio_double, dimids_hrz, desc_solld )
-         ierr = pio_def_var(file, 'cam_out_THBOT', pio_double, dimids_hrz, desc_thbot )
-         ierr = pio_def_var(file, 'cam_out_PSL', pio_double, dimids_hrz, desc_psl )
-         ierr = pio_def_var(file, 'cam_out_WSRESP', pio_double, dimids_hrz, desc_wsresp )
-         ierr = pio_def_var(file, 'cam_out_TAU_EST', pio_double, dimids_hrz, desc_tau_est )
-         ierr = pio_def_var(file, 'cam_out_UGUST', pio_double, dimids_hrz, desc_ugust )
-         ierr = pio_def_var(file, 'cam_out_UOVERN', pio_double, dimids_hrz, desc_uovern )
-         ierr = pio_def_var(file, 'cam_out_CO2PROG', pio_double, dimids_hrz, desc_co2prog )
-         ierr = pio_def_var(file, 'cam_out_CO2DIAG', pio_double, dimids_hrz, desc_co2diag )
+         ! ierr = pio_def_var(file, 'cam_out_THBOT', pio_double, dimids_hrz, desc_thbot )
+         ! ierr = pio_def_var(file, 'cam_out_PSL', pio_double, dimids_hrz, desc_psl )
+         ! ierr = pio_def_var(file, 'cam_out_WSRESP', pio_double, dimids_hrz, desc_wsresp )
+         ! ierr = pio_def_var(file, 'cam_out_TAU_EST', pio_double, dimids_hrz, desc_tau_est )
+         ! ierr = pio_def_var(file, 'cam_out_UGUST', pio_double, dimids_hrz, desc_ugust )
+         ! ierr = pio_def_var(file, 'cam_out_UOVERN', pio_double, dimids_hrz, desc_uovern )
+         ! ierr = pio_def_var(file, 'cam_out_CO2PROG', pio_double, dimids_hrz, desc_co2prog )
+         ! ierr = pio_def_var(file, 'cam_out_CO2DIAG', pio_double, dimids_hrz, desc_co2diag )
          ! ierr = pio_def_var(file, 'cam_out_BCPHIDRY', pio_double, dimids_hrz, desc_bcphidry )
          ! ierr = pio_def_var(file, 'cam_out_BCPHODRY', pio_double, dimids_hrz, desc_bcphodry )
          ! ierr = pio_def_var(file, 'cam_out_OCPHIDRY', pio_double, dimids_hrz, desc_ocphidry )
@@ -490,50 +487,50 @@ CONTAINS
          ierr = pio_def_var(file, 'cam_in_ALDIR',  pio_double, dimids_hrz, desc_aldir)
          ierr = pio_def_var(file, 'cam_in_ALDIF',  pio_double, dimids_hrz, desc_aldif)
          ierr = pio_def_var(file, 'cam_in_LWUP',  pio_double, dimids_hrz, desc_lwup)
-         ierr = pio_def_var(file, 'cam_in_LHF',  pio_double, dimids_hrz, desc_lhf)
-         ierr = pio_def_var(file, 'cam_in_SHF',  pio_double, dimids_hrz, desc_shf)
-         ierr = pio_def_var(file, 'cam_in_H2OTEMP',  pio_double, dimids_hrz, desc_h2otemp)
-         ierr = pio_def_var(file, 'cam_in_WSX',  pio_double, dimids_hrz, desc_wsx)
-         ierr = pio_def_var(file, 'cam_in_WSY',  pio_double, dimids_hrz, desc_wsy)
-         ierr = pio_def_var(file, 'cam_in_TREF',  pio_double, dimids_hrz, desc_tref)
-         ierr = pio_def_var(file, 'cam_in_QREF',  pio_double, dimids_hrz, desc_qref)
-         ierr = pio_def_var(file, 'cam_in_U10',  pio_double, dimids_hrz, desc_u10)
-         ierr = pio_def_var(file, 'cam_in_TS',  pio_double, dimids_hrz, desc_ts)
-         ierr = pio_def_var(file, 'cam_in_SST',  pio_double, dimids_hrz, desc_sst)
+         ! ierr = pio_def_var(file, 'cam_in_LHF',  pio_double, dimids_hrz, desc_lhf)
+         ! ierr = pio_def_var(file, 'cam_in_SHF',  pio_double, dimids_hrz, desc_shf)
+         ! ierr = pio_def_var(file, 'cam_in_H2OTEMP',  pio_double, dimids_hrz, desc_h2otemp)
+         ! ierr = pio_def_var(file, 'cam_in_WSX',  pio_double, dimids_hrz, desc_wsx)
+         ! ierr = pio_def_var(file, 'cam_in_WSY',  pio_double, dimids_hrz, desc_wsy)
+         ! ierr = pio_def_var(file, 'cam_in_TREF',  pio_double, dimids_hrz, desc_tref)
+         ! ierr = pio_def_var(file, 'cam_in_QREF',  pio_double, dimids_hrz, desc_qref)
+         ! ierr = pio_def_var(file, 'cam_in_U10',  pio_double, dimids_hrz, desc_u10)
+         ! ierr = pio_def_var(file, 'cam_in_TS',  pio_double, dimids_hrz, desc_ts)
+         ! ierr = pio_def_var(file, 'cam_in_SST',  pio_double, dimids_hrz, desc_sst)
          ierr = pio_def_var(file, 'cam_in_SNOWHLAND',  pio_double, dimids_hrz, desc_snowhland)
          ierr = pio_def_var(file, 'cam_in_SNOWHICE',  pio_double, dimids_hrz, desc_snowhice)
-         ierr = pio_def_var(file, 'cam_in_FCO2_LND',  pio_double, dimids_hrz, desc_fco2_lnd)
-         ierr = pio_def_var(file, 'cam_in_FCO2_OCN',  pio_double, dimids_hrz, desc_fco2_ocn)
-         ierr = pio_def_var(file, 'cam_in_FDMS',  pio_double, dimids_hrz, desc_fdms)
+         ! ierr = pio_def_var(file, 'cam_in_FCO2_LND',  pio_double, dimids_hrz, desc_fco2_lnd)
+         ! ierr = pio_def_var(file, 'cam_in_FCO2_OCN',  pio_double, dimids_hrz, desc_fco2_ocn)
+         ! ierr = pio_def_var(file, 'cam_in_FDMS',  pio_double, dimids_hrz, desc_fdms)
          ierr = pio_def_var(file, 'cam_in_LANDFRAC',  pio_double, dimids_hrz, desc_landfrac)
          ierr = pio_def_var(file, 'cam_in_ICEFRAC',  pio_double, dimids_hrz, desc_icefrac)
          ierr = pio_def_var(file, 'cam_in_OCNFRAC',  pio_double, dimids_hrz, desc_ocnfrac)
-         ierr = pio_def_var(file, 'cam_in_RAM1',  pio_double, dimids_hrz, desc_ram1)
-         ierr = pio_def_var(file, 'cam_in_FV',  pio_double, dimids_hrz, desc_fv)
+         ! ierr = pio_def_var(file, 'cam_in_RAM1',  pio_double, dimids_hrz, desc_ram1)
+         ! ierr = pio_def_var(file, 'cam_in_FV',  pio_double, dimids_hrz, desc_fv)
          ! ierr = pio_def_var(file, 'cam_in_SOILW',  pio_double, dimids_hrz, desc_soilw) ! MOZART
-         ierr = pio_def_var(file, 'cam_in_USTAR',  pio_double, dimids_hrz, desc_ustar)
-         ierr = pio_def_var(file, 'cam_in_RE',  pio_double, dimids_hrz, desc_re)
-         ierr = pio_def_var(file, 'cam_in_SSQ',  pio_double, dimids_hrz, desc_ssq)
+         ! ierr = pio_def_var(file, 'cam_in_USTAR',  pio_double, dimids_hrz, desc_ustar)
+         ! ierr = pio_def_var(file, 'cam_in_RE',  pio_double, dimids_hrz, desc_re)
+         ! ierr = pio_def_var(file, 'cam_in_SSQ',  pio_double, dimids_hrz, desc_ssq)
 
-         do m=1,pcnst
-            write(num,'(i4.4)') m
-            ierr = pio_def_var(file, 'cam_in_CFLX'//num,  pio_double, dimids_hrz, desc_cflx(m))
-         end do
+         ! do m=1,pcnst
+         !    write(num,'(i4.4)') m
+         !    ierr = pio_def_var(file, 'cam_in_CFLX'//num,  pio_double, dimids_hrz, desc_cflx(m))
+         ! end do
 
-         do m=1,n_drydep
-            write(num,'(i4.4)') m
-            ierr = pio_def_var(file, 'cam_in_DEPVEL'//num,  pio_double, dimids_hrz, desc_depvel(m))
-         end do
+         ! do m=1,n_drydep
+         !    write(num,'(i4.4)') m
+         !    ierr = pio_def_var(file, 'cam_in_DEPVEL'//num,  pio_double, dimids_hrz, desc_depvel(m))
+         ! end do
 
-         do m=1,4
-            write(num,'(i4.4)') m
-            ierr = pio_def_var(file, 'cam_in_DSTFLX'//num,  pio_double, dimids_hrz, desc_dstflx(m))
-         end do
+         ! do m=1,4
+         !    write(num,'(i4.4)') m
+         !    ierr = pio_def_var(file, 'cam_in_DSTFLX'//num,  pio_double, dimids_hrz, desc_dstflx(m))
+         ! end do
 
-         do m=1,shr_megan_mechcomps_n
-            write(num,'(i4.4)') m
-            ierr = pio_def_var(file, 'cam_in_MEGANFLX'//num,  pio_double, dimids_hrz, desc_meganflx(m))
-         end do
+         ! do m=1,shr_megan_mechcomps_n
+         !    write(num,'(i4.4)') m
+         !    ierr = pio_def_var(file, 'cam_in_MEGANFLX'//num,  pio_double, dimids_hrz, desc_meganflx(m))
+         ! end do
       end if
 
       !-------------------------------------------------------------------------
@@ -569,22 +566,22 @@ CONTAINS
       ! write physics state variables
       if (add_phys_state) then
 
-         do i=begchunk,endchunk
-            tmp2D(:ncol(i), i) = phys_state(i)%ps(:ncol(i))
-         end do
+         ! do i=begchunk,endchunk
+         !    tmp2D(:ncol(i), i) = phys_state(i)%ps(:ncol(i))
+         ! end do
+         ! call pio_write_darray(file, state_desc_ps, iodesc2d, tmp2D, ierr)
 
-         call pio_write_darray(file, state_desc_ps, iodesc2d, tmp2D, ierr)
-         do i=begchunk,endchunk
-            tmp2D(:ncol(i), i) = phys_state(i)%psdry(:ncol(i))
-         end do
-         call pio_write_darray(file, state_desc_psdry, iodesc2d, tmp2D, ierr)
+         ! do i=begchunk,endchunk
+         !    tmp2D(:ncol(i), i) = phys_state(i)%psdry(:ncol(i))
+         ! end do
+         ! call pio_write_darray(file, state_desc_psdry, iodesc2d, tmp2D, ierr)
 
-         do i=begchunk,endchunk
-            tmp2D(:ncol(i), i) = phys_state(i)%phis(:ncol(i))
-         end do
-         call pio_write_darray(file, state_desc_phis, iodesc2d, tmp2D, ierr)
+         ! do i=begchunk,endchunk
+         !    tmp2D(:ncol(i), i) = phys_state(i)%phis(:ncol(i))
+         ! end do
+         ! call pio_write_darray(file, state_desc_phis, iodesc2d, tmp2D, ierr)
 
-         do m=1,pcnst
+         do m=1,3 !m=1,pcnst
             do i=begchunk,endchunk
                tmp3D(:ncol(i),:,i) = phys_state(i)%q(:ncol(i),:,m) 
             end do
@@ -606,90 +603,93 @@ CONTAINS
          end do
          call pio_write_darray(file, state_desc_v, iodesc3d, tmp3D, ierr)
 
-         do i=begchunk,endchunk
-            tmp3D(:ncol(i),:,i) = phys_state(i)%s(:ncol(i),:) 
-         end do
-         call pio_write_darray(file, state_desc_s, iodesc3d, tmp3D, ierr)
+         ! do i=begchunk,endchunk
+         !    tmp3D(:ncol(i),:,i) = phys_state(i)%s(:ncol(i),:) 
+         ! end do
+         ! call pio_write_darray(file, state_desc_s, iodesc3d, tmp3D, ierr)
 
-         do i=begchunk,endchunk
-            tmp3D(:ncol(i),:,i) = phys_state(i)%omega(:ncol(i),:) 
-         end do
-         call pio_write_darray(file, state_desc_omega, iodesc3d, tmp3D, ierr)
+         ! do i=begchunk,endchunk
+         !    tmp3D(:ncol(i),:,i) = phys_state(i)%omega(:ncol(i),:) 
+         ! end do
+         ! call pio_write_darray(file, state_desc_omega, iodesc3d, tmp3D, ierr)
          
-         do i=begchunk,endchunk
-            tmp3D(:ncol(i),:,i) = phys_state(i)%pmid(:ncol(i),:) 
-         end do
-         call pio_write_darray(file, state_desc_pmid, iodesc3d, tmp3D, ierr)
+         ! state%pmid is only for ml input 
+         if (mode==1) then
+           do i=begchunk,endchunk
+              tmp3D(:ncol(i),:,i) = phys_state(i)%pmid(:ncol(i),:) 
+           end do
+           call pio_write_darray(file, state_desc_pmid, iodesc3d, tmp3D, ierr)
+         end if
+
+         ! do i=begchunk,endchunk
+         !    tmp3D(:ncol(i),:,i) = phys_state(i)%pmiddry(:ncol(i),:) 
+         ! end do
+         ! call pio_write_darray(file, state_desc_pmiddry, iodesc3d, tmp3D, ierr)
          
-         do i=begchunk,endchunk
-            tmp3D(:ncol(i),:,i) = phys_state(i)%pmiddry(:ncol(i),:) 
-         end do
-         call pio_write_darray(file, state_desc_pmiddry, iodesc3d, tmp3D, ierr)
+         ! do i=begchunk,endchunk
+         !    tmp3D(:ncol(i),:,i) = phys_state(i)%pdel(:ncol(i),:) 
+         ! end do
+         ! call pio_write_darray(file, state_desc_pdel, iodesc3d, tmp3D, ierr)
          
-         do i=begchunk,endchunk
-            tmp3D(:ncol(i),:,i) = phys_state(i)%pdel(:ncol(i),:) 
-         end do
-         call pio_write_darray(file, state_desc_pdel, iodesc3d, tmp3D, ierr)
+         ! do i=begchunk,endchunk
+         !    tmp3D(:ncol(i),:,i) = phys_state(i)%pdeldry(:ncol(i),:) 
+         ! end do
+         ! call pio_write_darray(file, state_desc_pdeldry, iodesc3d, tmp3D, ierr)
          
-         do i=begchunk,endchunk
-            tmp3D(:ncol(i),:,i) = phys_state(i)%pdeldry(:ncol(i),:) 
-         end do
-         call pio_write_darray(file, state_desc_pdeldry, iodesc3d, tmp3D, ierr)
+         ! do i=begchunk,endchunk
+         !    tmp3D(:ncol(i),:,i) = phys_state(i)%rpdel(:ncol(i),:) 
+         ! end do
+         ! call pio_write_darray(file, state_desc_rpdel, iodesc3d, tmp3D, ierr)
          
-         do i=begchunk,endchunk
-            tmp3D(:ncol(i),:,i) = phys_state(i)%rpdel(:ncol(i),:) 
-         end do
-         call pio_write_darray(file, state_desc_rpdel, iodesc3d, tmp3D, ierr)
+         ! do i=begchunk,endchunk
+         !    tmp3D(:ncol(i),:,i) = phys_state(i)%rpdeldry(:ncol(i),:) 
+         ! end do
+         ! call pio_write_darray(file, state_desc_rpdeldry, iodesc3d, tmp3D, ierr)
          
-         do i=begchunk,endchunk
-            tmp3D(:ncol(i),:,i) = phys_state(i)%rpdeldry(:ncol(i),:) 
-         end do
-         call pio_write_darray(file, state_desc_rpdeldry, iodesc3d, tmp3D, ierr)
+         ! do i=begchunk,endchunk
+         !    tmp3D(:ncol(i),:,i) = phys_state(i)%lnpmid(:ncol(i),:) 
+         ! end do
+         ! call pio_write_darray(file, state_desc_lnpmid, iodesc3d, tmp3D, ierr)
          
-         do i=begchunk,endchunk
-            tmp3D(:ncol(i),:,i) = phys_state(i)%lnpmid(:ncol(i),:) 
-         end do
-         call pio_write_darray(file, state_desc_lnpmid, iodesc3d, tmp3D, ierr)
+         ! do i=begchunk,endchunk
+         !    tmp3D(:ncol(i),:,i) = phys_state(i)%lnpmiddry(:ncol(i),:) 
+         ! end do
+         ! call pio_write_darray(file, state_desc_lnpmiddry, iodesc3d, tmp3D, ierr)
          
-         do i=begchunk,endchunk
-            tmp3D(:ncol(i),:,i) = phys_state(i)%lnpmiddry(:ncol(i),:) 
-         end do
-         call pio_write_darray(file, state_desc_lnpmiddry, iodesc3d, tmp3D, ierr)
+         ! do i=begchunk,endchunk
+         !    tmp3D(:ncol(i),:,i) = phys_state(i)%exner(:ncol(i),:) 
+         ! end do
+         ! call pio_write_darray(file, state_desc_exner, iodesc3d, tmp3D, ierr)
          
-         do i=begchunk,endchunk
-            tmp3D(:ncol(i),:,i) = phys_state(i)%exner(:ncol(i),:) 
-         end do
-         call pio_write_darray(file, state_desc_exner, iodesc3d, tmp3D, ierr)
+         ! do i=begchunk,endchunk
+         !    tmp3D(:ncol(i),:,i) = phys_state(i)%zm(:ncol(i),:) 
+         ! end do
+         ! call pio_write_darray(file, state_desc_zm, iodesc3d, tmp3D, ierr)
          
-         do i=begchunk,endchunk
-            tmp3D(:ncol(i),:,i) = phys_state(i)%zm(:ncol(i),:) 
-         end do
-         call pio_write_darray(file, state_desc_zm, iodesc3d, tmp3D, ierr)
+         ! do i=begchunk,endchunk
+         !    tmp3Dp(:ncol(i),:,i) = phys_state(i)%pint(:ncol(i),:) 
+         ! end do
+         ! call pio_write_darray(file, state_desc_pint, iodesc3dp, tmp3Dp, ierr)
          
-         do i=begchunk,endchunk
-            tmp3Dp(:ncol(i),:,i) = phys_state(i)%pint(:ncol(i),:) 
-         end do
-         call pio_write_darray(file, state_desc_pint, iodesc3dp, tmp3Dp, ierr)
+         ! do i=begchunk,endchunk
+         !    tmp3Dp(:ncol(i),:,i) = phys_state(i)%pintdry(:ncol(i),:) 
+         ! end do
+         ! call pio_write_darray(file, state_desc_pintdry, iodesc3dp, tmp3Dp, ierr)
          
-         do i=begchunk,endchunk
-            tmp3Dp(:ncol(i),:,i) = phys_state(i)%pintdry(:ncol(i),:) 
-         end do
-         call pio_write_darray(file, state_desc_pintdry, iodesc3dp, tmp3Dp, ierr)
+         ! do i=begchunk,endchunk
+         !    tmp3Dp(:ncol(i),:,i) = phys_state(i)%lnpint(:ncol(i),:) 
+         ! end do
+         ! call pio_write_darray(file, state_desc_lnpint, iodesc3dp, tmp3Dp, ierr)
          
-         do i=begchunk,endchunk
-            tmp3Dp(:ncol(i),:,i) = phys_state(i)%lnpint(:ncol(i),:) 
-         end do
-         call pio_write_darray(file, state_desc_lnpint, iodesc3dp, tmp3Dp, ierr)
+         ! do i=begchunk,endchunk
+         !    tmp3Dp(:ncol(i),:,i) = phys_state(i)%lnpintdry(:ncol(i),:) 
+         ! end do
+         ! call pio_write_darray(file, state_desc_lnpintdry, iodesc3dp, tmp3Dp, ierr)
          
-         do i=begchunk,endchunk
-            tmp3Dp(:ncol(i),:,i) = phys_state(i)%lnpintdry(:ncol(i),:) 
-         end do
-         call pio_write_darray(file, state_desc_lnpintdry, iodesc3dp, tmp3Dp, ierr)
-         
-         do i=begchunk,endchunk
-            tmp3Dp(:ncol(i),:,i) = phys_state(i)%zi(:ncol(i),:) 
-         end do
-         call pio_write_darray(file, state_desc_zi, iodesc3dp, tmp3Dp, ierr)
+         ! do i=begchunk,endchunk
+         !    tmp3Dp(:ncol(i),:,i) = phys_state(i)%zi(:ncol(i),:) 
+         ! end do
+         ! call pio_write_darray(file, state_desc_zi, iodesc3dp, tmp3Dp, ierr)
 
       end if
 
@@ -697,33 +697,35 @@ CONTAINS
       ! write physics state variables
       if (add_phys_tend) then
 
-         do i=begchunk,endchunk
-            tmp3D(:ncol(i),:,i) = phys_tend(i)%dtdt(:ncol(i),:)
-         end do
-         call pio_write_darray(file, tend_desc_dtdt, iodesc3d, tmp3D, ierr)
+         ! do i=begchunk,endchunk
+         !    tmp3D(:ncol(i),:,i) = phys_tend(i)%dtdt(:ncol(i),:)
+         ! end do
+         ! call pio_write_darray(file, tend_desc_dtdt, iodesc3d, tmp3D, ierr)
 
-         do i=begchunk,endchunk
-            tmp3D(:ncol(i),:,i) = phys_tend(i)%dudt(:ncol(i),:)
-         end do
-         call pio_write_darray(file, tend_desc_dudt, iodesc3d, tmp3D, ierr)
+         ! do i=begchunk,endchunk
+         !    tmp3D(:ncol(i),:,i) = phys_tend(i)%dudt(:ncol(i),:)
+         ! end do
+         ! call pio_write_darray(file, tend_desc_dudt, iodesc3d, tmp3D, ierr)
 
-         do i=begchunk,endchunk
-            tmp3D(:ncol(i),:,i) = phys_tend(i)%dvdt(:ncol(i),:)
-         end do 
-         call pio_write_darray(file, tend_desc_dvdt, iodesc3d, tmp3D, ierr)
+         ! do i=begchunk,endchunk
+         !    tmp3D(:ncol(i),:,i) = phys_tend(i)%dvdt(:ncol(i),:)
+         ! end do 
+         ! call pio_write_darray(file, tend_desc_dvdt, iodesc3d, tmp3D, ierr)
 
-         do i=begchunk,endchunk
-            tmp2D(:ncol(i),i) = phys_tend(i)%flx_net(:ncol(i))
-         end do
-         call pio_write_darray(file, tend_desc_flx_net, iodesc2d, tmp2D, ierr)
-         do i=begchunk,endchunk
-            tmp2D(:ncol(i),i) = phys_tend(i)%te_tnd(:ncol(i))
-         end do
-         call pio_write_darray(file, tend_desc_te_tnd, iodesc2d, tmp2D, ierr)
-         do i=begchunk,endchunk
-            tmp2D(:ncol(i),i) = phys_tend(i)%tw_tnd(:ncol(i))
-         end do
-         call pio_write_darray(file, tend_desc_tw_tnd, iodesc2d, tmp2D, ierr)
+         ! do i=begchunk,endchunk
+         !    tmp2D(:ncol(i),i) = phys_tend(i)%flx_net(:ncol(i))
+         ! end do
+         ! call pio_write_darray(file, tend_desc_flx_net, iodesc2d, tmp2D, ierr)
+
+         ! do i=begchunk,endchunk
+         !    tmp2D(:ncol(i),i) = phys_tend(i)%te_tnd(:ncol(i))
+         ! end do
+         ! call pio_write_darray(file, tend_desc_te_tnd, iodesc2d, tmp2D, ierr)
+
+         ! do i=begchunk,endchunk
+         !    tmp2D(:ncol(i),i) = phys_tend(i)%tw_tnd(:ncol(i))
+         ! end do
+         ! call pio_write_darray(file, tend_desc_tw_tnd, iodesc2d, tmp2D, ierr)
 
       end if
 
@@ -731,33 +733,33 @@ CONTAINS
       ! Write cam_in components
       if (add_cam_in) then
 
-         do m=1,pcnst
-            do i=begchunk,endchunk
-               tmp2D(:ncol(i), i) = cam_in(i)%cflx(:ncol(i), m)
-            end do
-            call pio_write_darray(file, desc_cflx(m), iodesc2d, tmp2D, ierr)
-         end do
+         ! do m=1,pcnst
+         !    do i=begchunk,endchunk
+         !       tmp2D(:ncol(i), i) = cam_in(i)%cflx(:ncol(i), m)
+         !    end do
+         !    call pio_write_darray(file, desc_cflx(m), iodesc2d, tmp2D, ierr)
+         ! end do
 
-         do m=1,n_drydep
-            do i=begchunk,endchunk
-               tmp2D(:ncol(i), i) = cam_in(i)%depvel(:ncol(i), m)
-            end do
-            call pio_write_darray(file, desc_depvel(m), iodesc2d, tmp2D, ierr)
-         end do
+         ! do m=1,n_drydep
+         !    do i=begchunk,endchunk
+         !       tmp2D(:ncol(i), i) = cam_in(i)%depvel(:ncol(i), m)
+         !    end do
+         !    call pio_write_darray(file, desc_depvel(m), iodesc2d, tmp2D, ierr)
+         ! end do
 
-         do m=1,4
-            do i=begchunk,endchunk
-               tmp2D(:ncol(i), i) = cam_in(i)%dstflx(:ncol(i), m)
-            end do
-            call pio_write_darray(file, desc_dstflx(m), iodesc2d, tmp2D, ierr)
-         end do
+         ! do m=1,4
+         !    do i=begchunk,endchunk
+         !       tmp2D(:ncol(i), i) = cam_in(i)%dstflx(:ncol(i), m)
+         !    end do
+         !    call pio_write_darray(file, desc_dstflx(m), iodesc2d, tmp2D, ierr)
+         ! end do
 
-         do m=1,shr_megan_mechcomps_n
-            do i=begchunk,endchunk
-               tmp2D(:ncol(i), i) = cam_in(i)%meganflx(:ncol(i), m)
-            end do
-            call pio_write_darray(file, desc_meganflx(m), iodesc2d, tmp2D, ierr)
-         end do
+         ! do m=1,shr_megan_mechcomps_n
+         !    do i=begchunk,endchunk
+         !       tmp2D(:ncol(i), i) = cam_in(i)%meganflx(:ncol(i), m)
+         !    end do
+         !    call pio_write_darray(file, desc_meganflx(m), iodesc2d, tmp2D, ierr)
+         ! end do
 
          do i=begchunk,endchunk
             tmp2D(:ncol(i), i) = cam_in(i)%asdir(:ncol(i))
@@ -784,55 +786,55 @@ CONTAINS
          end do
          call pio_write_darray(file, desc_lwup, iodesc2d, tmp2D, ierr)
 
-         do i=begchunk,endchunk
-            tmp2D(:ncol(i), i) = cam_in(i)%lhf(:ncol(i))
-         end do
-         call pio_write_darray(file, desc_lhf, iodesc2d, tmp2D, ierr)
+         ! do i=begchunk,endchunk
+         !    tmp2D(:ncol(i), i) = cam_in(i)%lhf(:ncol(i))
+         ! end do
+         ! call pio_write_darray(file, desc_lhf, iodesc2d, tmp2D, ierr)
 
-         do i=begchunk,endchunk
-            tmp2D(:ncol(i), i) = cam_in(i)%shf(:ncol(i))
-         end do
-         call pio_write_darray(file, desc_shf, iodesc2d, tmp2D, ierr)
+         ! do i=begchunk,endchunk
+         !    tmp2D(:ncol(i), i) = cam_in(i)%shf(:ncol(i))
+         ! end do
+         ! call pio_write_darray(file, desc_shf, iodesc2d, tmp2D, ierr)
 
-         do i=begchunk,endchunk
-            tmp2D(:ncol(i), i) = cam_in(i)%h2otemp(:ncol(i))
-         end do
-         call pio_write_darray(file, desc_h2otemp, iodesc2d, tmp2D, ierr)
+         ! do i=begchunk,endchunk
+         !    tmp2D(:ncol(i), i) = cam_in(i)%h2otemp(:ncol(i))
+         ! end do
+         ! call pio_write_darray(file, desc_h2otemp, iodesc2d, tmp2D, ierr)
 
-         do i=begchunk,endchunk
-            tmp2D(:ncol(i), i) = cam_in(i)%wsx(:ncol(i))
-         end do
-         call pio_write_darray(file, desc_wsx, iodesc2d, tmp2D, ierr)
+         ! do i=begchunk,endchunk
+         !    tmp2D(:ncol(i), i) = cam_in(i)%wsx(:ncol(i))
+         ! end do
+         ! call pio_write_darray(file, desc_wsx, iodesc2d, tmp2D, ierr)
 
-         do i=begchunk,endchunk
-            tmp2D(:ncol(i), i) = cam_in(i)%wsy(:ncol(i))
-         end do
-         call pio_write_darray(file, desc_wsy, iodesc2d, tmp2D, ierr)
+         ! do i=begchunk,endchunk
+         !    tmp2D(:ncol(i), i) = cam_in(i)%wsy(:ncol(i))
+         ! end do
+         ! call pio_write_darray(file, desc_wsy, iodesc2d, tmp2D, ierr)
 
-         do i=begchunk,endchunk
-            tmp2D(:ncol(i), i) = cam_in(i)%tref(:ncol(i))
-         end do
-         call pio_write_darray(file, desc_tref, iodesc2d, tmp2D, ierr)
+         ! do i=begchunk,endchunk
+         !    tmp2D(:ncol(i), i) = cam_in(i)%tref(:ncol(i))
+         ! end do
+         ! call pio_write_darray(file, desc_tref, iodesc2d, tmp2D, ierr)
 
-         do i=begchunk,endchunk
-            tmp2D(:ncol(i), i) = cam_in(i)%qref(:ncol(i))
-         end do
-         call pio_write_darray(file, desc_qref, iodesc2d, tmp2D, ierr)
+         ! do i=begchunk,endchunk
+         !    tmp2D(:ncol(i), i) = cam_in(i)%qref(:ncol(i))
+         ! end do
+         ! call pio_write_darray(file, desc_qref, iodesc2d, tmp2D, ierr)
 
-         do i=begchunk,endchunk
-            tmp2D(:ncol(i), i) = cam_in(i)%u10(:ncol(i))
-         end do
-         call pio_write_darray(file, desc_u10, iodesc2d, tmp2D, ierr)
+         ! do i=begchunk,endchunk
+         !    tmp2D(:ncol(i), i) = cam_in(i)%u10(:ncol(i))
+         ! end do
+         ! call pio_write_darray(file, desc_u10, iodesc2d, tmp2D, ierr)
 
-         do i=begchunk,endchunk
-            tmp2D(:ncol(i), i) = cam_in(i)%ts(:ncol(i))
-         end do
-         call pio_write_darray(file, desc_ts, iodesc2d, tmp2D, ierr)
+         ! do i=begchunk,endchunk
+         !    tmp2D(:ncol(i), i) = cam_in(i)%ts(:ncol(i))
+         ! end do
+         ! call pio_write_darray(file, desc_ts, iodesc2d, tmp2D, ierr)
 
-         do i=begchunk,endchunk
-            tmp2D(:ncol(i), i) = cam_in(i)%sst(:ncol(i))
-         end do
-         call pio_write_darray(file, desc_sst, iodesc2d, tmp2D, ierr)
+         ! do i=begchunk,endchunk
+         !    tmp2D(:ncol(i), i) = cam_in(i)%sst(:ncol(i))
+         ! end do
+         ! call pio_write_darray(file, desc_sst, iodesc2d, tmp2D, ierr)
 
          do i=begchunk,endchunk
             tmp2D(:ncol(i), i) = cam_in(i)%snowhland(:ncol(i))
@@ -844,20 +846,20 @@ CONTAINS
          end do
          call pio_write_darray(file, desc_snowhice, iodesc2d, tmp2D, ierr)
 
-         do i=begchunk,endchunk
-            tmp2D(:ncol(i), i) = cam_in(i)%fco2_lnd(:ncol(i))
-         end do
-         call pio_write_darray(file, desc_fco2_lnd, iodesc2d, tmp2D, ierr)
+         ! do i=begchunk,endchunk
+         !    tmp2D(:ncol(i), i) = cam_in(i)%fco2_lnd(:ncol(i))
+         ! end do
+         ! call pio_write_darray(file, desc_fco2_lnd, iodesc2d, tmp2D, ierr)
 
-         do i=begchunk,endchunk
-            tmp2D(:ncol(i), i) = cam_in(i)%fco2_ocn(:ncol(i))
-         end do
-         call pio_write_darray(file, desc_fco2_ocn, iodesc2d, tmp2D, ierr)
+         ! do i=begchunk,endchunk
+         !    tmp2D(:ncol(i), i) = cam_in(i)%fco2_ocn(:ncol(i))
+         ! end do
+         ! call pio_write_darray(file, desc_fco2_ocn, iodesc2d, tmp2D, ierr)
 
-         do i=begchunk,endchunk
-            tmp2D(:ncol(i), i) = cam_in(i)%fdms(:ncol(i))
-         end do
-         call pio_write_darray(file, desc_fdms, iodesc2d, tmp2D, ierr)
+         ! do i=begchunk,endchunk
+         !    tmp2D(:ncol(i), i) = cam_in(i)%fdms(:ncol(i))
+         ! end do
+         ! call pio_write_darray(file, desc_fdms, iodesc2d, tmp2D, ierr)
 
          do i=begchunk,endchunk
             tmp2D(:ncol(i), i) = cam_in(i)%landfrac(:ncol(i))
@@ -874,15 +876,15 @@ CONTAINS
          end do
          call pio_write_darray(file, desc_ocnfrac, iodesc2d, tmp2D, ierr)
 
-         do i=begchunk,endchunk
-            tmp2D(:ncol(i), i) = cam_in(i)%ram1(:ncol(i))
-         end do
-         call pio_write_darray(file, desc_ram1, iodesc2d, tmp2D, ierr)
+         ! do i=begchunk,endchunk
+         !    tmp2D(:ncol(i), i) = cam_in(i)%ram1(:ncol(i))
+         ! end do
+         ! call pio_write_darray(file, desc_ram1, iodesc2d, tmp2D, ierr)
 
-         do i=begchunk,endchunk
-            tmp2D(:ncol(i), i) = cam_in(i)%fv(:ncol(i))
-         end do
-         call pio_write_darray(file, desc_fv, iodesc2d, tmp2D, ierr)
+         ! do i=begchunk,endchunk
+         !    tmp2D(:ncol(i), i) = cam_in(i)%fv(:ncol(i))
+         ! end do
+         ! call pio_write_darray(file, desc_fv, iodesc2d, tmp2D, ierr)
 
          ! MOZART
          ! do i=begchunk,endchunk
@@ -890,20 +892,20 @@ CONTAINS
          ! end do
          ! call pio_write_darray(file, desc_soilw, iodesc2d, tmp2D, ierr)
 
-         do i=begchunk,endchunk
-            tmp2D(:ncol(i), i) = cam_in(i)%ustar(:ncol(i))
-         end do
-         call pio_write_darray(file, desc_ustar, iodesc2d, tmp2D, ierr)
+         ! do i=begchunk,endchunk
+         !    tmp2D(:ncol(i), i) = cam_in(i)%ustar(:ncol(i))
+         ! end do
+         ! call pio_write_darray(file, desc_ustar, iodesc2d, tmp2D, ierr)
 
-         do i=begchunk,endchunk
-            tmp2D(:ncol(i), i) = cam_in(i)%re(:ncol(i))
-         end do
-         call pio_write_darray(file, desc_re, iodesc2d, tmp2D, ierr)
+         ! do i=begchunk,endchunk
+         !    tmp2D(:ncol(i), i) = cam_in(i)%re(:ncol(i))
+         ! end do
+         ! call pio_write_darray(file, desc_re, iodesc2d, tmp2D, ierr)
 
-         do i=begchunk,endchunk
-            tmp2D(:ncol(i), i) = cam_in(i)%ssq(:ncol(i))
-         end do
-         call pio_write_darray(file, desc_ssq, iodesc2d, tmp2D, ierr)
+         ! do i=begchunk,endchunk
+         !    tmp2D(:ncol(i), i) = cam_in(i)%ssq(:ncol(i))
+         ! end do
+         ! call pio_write_darray(file, desc_ssq, iodesc2d, tmp2D, ierr)
 
 
       end if
@@ -957,42 +959,42 @@ CONTAINS
       ! :: dstdry4(:)  ! dry deposition of dust (bin4)
       if (add_cam_out) then
 
-         do i=begchunk,endchunk
-            tmp2D(:ncol(i), i) = cam_out(i)%tbot(:ncol(i))
-         end do
-         call pio_write_darray(file, desc_tbot, iodesc2d, tmp2D, ierr)
+         ! do i=begchunk,endchunk
+         !    tmp2D(:ncol(i), i) = cam_out(i)%tbot(:ncol(i))
+         ! end do
+         ! call pio_write_darray(file, desc_tbot, iodesc2d, tmp2D, ierr)
 
-         do i=begchunk,endchunk
-            tmp2D(:ncol(i), i) = cam_out(i)%zbot(:ncol(i))
-         end do
-         call pio_write_darray(file, desc_zbot, iodesc2d, tmp2D, ierr)
+         ! do i=begchunk,endchunk
+         !    tmp2D(:ncol(i), i) = cam_out(i)%zbot(:ncol(i))
+         ! end do
+         ! call pio_write_darray(file, desc_zbot, iodesc2d, tmp2D, ierr)
 
-         do i=begchunk,endchunk
-            tmp2D(:ncol(i), i) = cam_out(i)%ubot(:ncol(i))
-         end do
-         call pio_write_darray(file, desc_ubot, iodesc2d, tmp2D, ierr)
+         ! do i=begchunk,endchunk
+         !    tmp2D(:ncol(i), i) = cam_out(i)%ubot(:ncol(i))
+         ! end do
+         ! call pio_write_darray(file, desc_ubot, iodesc2d, tmp2D, ierr)
 
-         do i=begchunk,endchunk
-            tmp2D(:ncol(i), i) = cam_out(i)%vbot(:ncol(i))
-         end do
-         call pio_write_darray(file, desc_vbot, iodesc2d, tmp2D, ierr)
+         ! do i=begchunk,endchunk
+         !    tmp2D(:ncol(i), i) = cam_out(i)%vbot(:ncol(i))
+         ! end do
+         ! call pio_write_darray(file, desc_vbot, iodesc2d, tmp2D, ierr)
 
-         do m=1,pcnst
-            do i=begchunk,endchunk
-               tmp2D(:ncol(i),i) = cam_out(i)%qbot(:ncol(i),m)
-            end do
-            call pio_write_darray(file, desc_qbot(m), iodesc2d, tmp2D, ierr)
-         end do
+         ! do m=1,pcnst
+         !    do i=begchunk,endchunk
+         !       tmp2D(:ncol(i),i) = cam_out(i)%qbot(:ncol(i),m)
+         !    end do
+         !    call pio_write_darray(file, desc_qbot(m), iodesc2d, tmp2D, ierr)
+         ! end do
 
-         do i=begchunk,endchunk
-            tmp2D(:ncol(i), i) = cam_out(i)%pbot(:ncol(i))
-         end do
-         call pio_write_darray(file, desc_pbot, iodesc2d, tmp2D, ierr)
+         ! do i=begchunk,endchunk
+         !    tmp2D(:ncol(i), i) = cam_out(i)%pbot(:ncol(i))
+         ! end do
+         ! call pio_write_darray(file, desc_pbot, iodesc2d, tmp2D, ierr)
 
-         do i=begchunk,endchunk
-            tmp2D(:ncol(i), i) = cam_out(i)%rho(:ncol(i))
-         end do
-         call pio_write_darray(file, desc_rho, iodesc2d, tmp2D, ierr)
+         ! do i=begchunk,endchunk
+         !    tmp2D(:ncol(i), i) = cam_out(i)%rho(:ncol(i))
+         ! end do
+         ! call pio_write_darray(file, desc_rho, iodesc2d, tmp2D, ierr)
 
          do i=begchunk,endchunk
             tmp2D(:ncol(i), i) = cam_out(i)%netsw(:ncol(i))
@@ -1009,20 +1011,20 @@ CONTAINS
          end do
          call pio_write_darray(file, desc_precsc, iodesc2d, tmp2D, ierr)
 
-         do i=begchunk,endchunk
-            tmp2D(:ncol(i), i) = cam_out(i)%precsl(:ncol(i))
-         end do
-         call pio_write_darray(file, desc_precsl, iodesc2d, tmp2D, ierr)
+         ! do i=begchunk,endchunk
+         !    tmp2D(:ncol(i), i) = cam_out(i)%precsl(:ncol(i))
+         ! end do
+         ! call pio_write_darray(file, desc_precsl, iodesc2d, tmp2D, ierr)
 
          do i=begchunk,endchunk
             tmp2D(:ncol(i), i) = cam_out(i)%precc(:ncol(i))
          end do
          call pio_write_darray(file, desc_precc, iodesc2d, tmp2D, ierr)
 
-         do i=begchunk,endchunk
-            tmp2D(:ncol(i), i) = cam_out(i)%precl(:ncol(i))
-         end do
-         call pio_write_darray(file, desc_precl, iodesc2d, tmp2D, ierr)
+         ! do i=begchunk,endchunk
+         !    tmp2D(:ncol(i), i) = cam_out(i)%precl(:ncol(i))
+         ! end do
+         ! call pio_write_darray(file, desc_precl, iodesc2d, tmp2D, ierr)
 
          do i=begchunk,endchunk
             tmp2D(:ncol(i), i) = cam_out(i)%sols(:ncol(i))
@@ -1044,45 +1046,45 @@ CONTAINS
          end do
          call pio_write_darray(file, desc_solld, iodesc2d, tmp2D, ierr)
 
-         do i=begchunk,endchunk
-            tmp2D(:ncol(i), i) = cam_out(i)%thbot(:ncol(i))
-         end do
-         call pio_write_darray(file, desc_thbot, iodesc2d, tmp2D, ierr)
+         ! do i=begchunk,endchunk
+         !    tmp2D(:ncol(i), i) = cam_out(i)%thbot(:ncol(i))
+         ! end do
+         ! call pio_write_darray(file, desc_thbot, iodesc2d, tmp2D, ierr)
 
-         do i=begchunk,endchunk
-            tmp2D(:ncol(i), i) = cam_out(i)%psl(:ncol(i))
-         end do
-         call pio_write_darray(file, desc_psl, iodesc2d, tmp2D, ierr)
+         ! do i=begchunk,endchunk
+         !    tmp2D(:ncol(i), i) = cam_out(i)%psl(:ncol(i))
+         ! end do
+         ! call pio_write_darray(file, desc_psl, iodesc2d, tmp2D, ierr)
 
-         do i=begchunk,endchunk
-            tmp2D(:ncol(i), i) = cam_out(i)%wsresp(:ncol(i))
-         end do
-         call pio_write_darray(file, desc_wsresp, iodesc2d, tmp2D, ierr)
+         ! do i=begchunk,endchunk
+         !    tmp2D(:ncol(i), i) = cam_out(i)%wsresp(:ncol(i))
+         ! end do
+         ! call pio_write_darray(file, desc_wsresp, iodesc2d, tmp2D, ierr)
 
-         do i=begchunk,endchunk
-            tmp2D(:ncol(i), i) = cam_out(i)%tau_est(:ncol(i))
-         end do
-         call pio_write_darray(file, desc_tau_est, iodesc2d, tmp2D, ierr)
+         ! do i=begchunk,endchunk
+         !    tmp2D(:ncol(i), i) = cam_out(i)%tau_est(:ncol(i))
+         ! end do
+         ! call pio_write_darray(file, desc_tau_est, iodesc2d, tmp2D, ierr)
 
-         do i=begchunk,endchunk
-            tmp2D(:ncol(i), i) = cam_out(i)%ugust(:ncol(i))
-         end do
-         call pio_write_darray(file, desc_ugust, iodesc2d, tmp2D, ierr)
+         ! do i=begchunk,endchunk
+         !    tmp2D(:ncol(i), i) = cam_out(i)%ugust(:ncol(i))
+         ! end do
+         ! call pio_write_darray(file, desc_ugust, iodesc2d, tmp2D, ierr)
 
-         do i=begchunk,endchunk
-            tmp2D(:ncol(i), i) = cam_out(i)%uovern(:ncol(i))
-         end do
-         call pio_write_darray(file, desc_uovern, iodesc2d, tmp2D, ierr)
+         ! do i=begchunk,endchunk
+         !    tmp2D(:ncol(i), i) = cam_out(i)%uovern(:ncol(i))
+         ! end do
+         ! call pio_write_darray(file, desc_uovern, iodesc2d, tmp2D, ierr)
 
-         do i=begchunk,endchunk
-            tmp2D(:ncol(i), i) = cam_out(i)%co2prog(:ncol(i))
-         end do
-         call pio_write_darray(file, desc_co2prog, iodesc2d, tmp2D, ierr)
+         ! do i=begchunk,endchunk
+         !    tmp2D(:ncol(i), i) = cam_out(i)%co2prog(:ncol(i))
+         ! end do
+         ! call pio_write_darray(file, desc_co2prog, iodesc2d, tmp2D, ierr)
 
-          do i=begchunk,endchunk
-             tmp2D(:ncol(i), i) = cam_out(i)%co2diag(:ncol(i))
-          end do
-          call pio_write_darray(file, desc_co2diag, iodesc2d, tmp2D, ierr)
+          ! do i=begchunk,endchunk
+          !    tmp2D(:ncol(i), i) = cam_out(i)%co2diag(:ncol(i))
+          ! end do
+          ! call pio_write_darray(file, desc_co2diag, iodesc2d, tmp2D, ierr)
 
           ! do i=begchunk,endchunk
           !    tmp2D(:ncol(i), i) = cam_out(i)%bcphidry(:ncol(i))

@@ -1416,11 +1416,16 @@ CONTAINS
         end if
         if (mdimsize > 0) then
           varname = trim(pbuf%hdr%name)//trim(field_grid_suff(grid_select))
-          ! skip CRM data in pbuf
-          if (trim(varname(1:4))=='CRM_') cycle
-          varname = 'pbuf_'//varname ! add prefix for easier organization
-          call cam_pio_def_var(File, varname, piodtype, adimid(1:dimcnt),     &
-               pbuf%hdr%vardesc(grid_select), existOK=.false.)
+          ! skip CRM data in pbuf:
+          ! if (trim(varname(1:4))=='CRM_') cycle
+          ! only output selected variables:
+        if (any((/'LHFLX ','SHFLX ','TAUX  ','TAUY  ','CH4   ','N2O   ','ozone ', &
+                'SOLIN ','COSZRS'/)&         
+              ==trim(varname))) then
+            varname = 'pbuf_'//varname ! add prefix for easier organization
+            call cam_pio_def_var(File, varname, piodtype, adimid(1:dimcnt),     &
+                                 pbuf%hdr%vardesc(grid_select), existOK=.false.)
+          end if
         end if
       end do
     end do
@@ -1446,17 +1451,22 @@ CONTAINS
     call cam_grid_dimensions(phys_decomp, gdimlens(1:2), grank)
     do index = 1, currentpbufflds
       varname = trim(pbufhdr(index)%hdr%name)
-      ! skip CRM data in pbuf
-      if (trim(varname(1:4))=='CRM_') cycle
-      dtype = pbufhdr(index)%hdr%dtype
-      select case(dtype)
-      case (TYPEDOUBLE)
-        call write_restart_field_double(File, pbuf2d, index, gdimlens, grank)
-      case (TYPEREAL)
-        call write_restart_field_real(File, pbuf2d, index, gdimlens, grank)
-      case (TYPEINT)
-        call write_restart_field_int(File, pbuf2d, index, gdimlens, grank)
-      end select
+      ! skip CRM data in pbuf:
+      ! if (trim(varname(1:4))=='CRM_') cycle
+      ! only output selected variables:
+      if (any((/'LHFLX ','SHFLX ','TAUX  ','TAUY  ','CH4   ','N2O   ','ozone ', &
+                'SOLIN ','COSZRS'/)&
+          ==trim(varname))) then 
+        dtype = pbufhdr(index)%hdr%dtype
+        select case(dtype)
+        case (TYPEDOUBLE)
+          call write_restart_field_double(File, pbuf2d, index, gdimlens, grank)
+        case (TYPEREAL)
+          call write_restart_field_real(File, pbuf2d, index, gdimlens, grank)
+        case (TYPEINT)
+          call write_restart_field_int(File, pbuf2d, index, gdimlens, grank)
+        end select
+      end if
     end do
   end subroutine pbuf_write_restart_alt
   !-----------------------------------------------------------------------------
