@@ -177,23 +177,23 @@ CONTAINS
       ! type(var_desc_t)     :: desc_uovern
       ! type(var_desc_t)     :: desc_co2prog
       ! type(var_desc_t)     :: desc_co2diag
-      !type(var_desc_t)     :: desc_bcphidry ! surface deposition flux are not used when atm_dep_flux=.false. in atm_in
-      !type(var_desc_t)     :: desc_bcphodry
-      !type(var_desc_t)     :: desc_ocphidry
-      !type(var_desc_t)     :: desc_ocphodry
-      !type(var_desc_t)     :: desc_dstdry1
-      !type(var_desc_t)     :: desc_dstdry2
-      !type(var_desc_t)     :: desc_dstdry3
-      !type(var_desc_t)     :: desc_dstdry4
-      !type(var_desc_t)     :: desc_bcphiwet
-      !type(var_desc_t)     :: desc_ocphiwet
-      !type(var_desc_t)     :: desc_dstwet1
-      !type(var_desc_t)     :: desc_dstwet2
-      !type(var_desc_t)     :: desc_dstwet3
-      !type(var_desc_t)     :: desc_dstwet4
+      ! type(var_desc_t)     :: desc_bcphidry ! surface deposition flux are not used when atm_dep_flux=.false. in atm_in
+      ! type(var_desc_t)     :: desc_bcphodry
+      ! type(var_desc_t)     :: desc_ocphidry
+      ! type(var_desc_t)     :: desc_ocphodry
+      ! type(var_desc_t)     :: desc_dstdry1
+      ! type(var_desc_t)     :: desc_dstdry2
+      ! type(var_desc_t)     :: desc_dstdry3
+      ! type(var_desc_t)     :: desc_dstdry4
+      ! type(var_desc_t)     :: desc_bcphiwet
+      ! type(var_desc_t)     :: desc_ocphiwet
+      ! type(var_desc_t)     :: desc_dstwet1
+      ! type(var_desc_t)     :: desc_dstwet2
+      ! type(var_desc_t)     :: desc_dstwet3
+      ! type(var_desc_t)     :: desc_dstwet4
 
       ! physics_state
-      ! [0] ps(:)        ! surface pressure
+      ! [1] ps(:)        ! surface pressure
       ! [0] psdry(:)     ! dry surface pressure
       ! [0] phis(:)      ! surface geopotential
       ! [0] ulat(:)      ! unique latitudes  (radians)
@@ -223,7 +223,7 @@ CONTAINS
       !  c_iflx_sfc, c_iflx_air, c_iflx_sff, c_iflx_lnd, c_iflx_ocn
       ! )
 
-      ! type(var_desc_t)     :: state_desc_ps
+      type(var_desc_t)     :: state_desc_ps
       ! type(var_desc_t)     :: state_desc_psdry
       ! type(var_desc_t)     :: state_desc_phis
       type(var_desc_t)     :: state_desc_t
@@ -383,7 +383,9 @@ CONTAINS
       !-------------------------------------------------------------------------
       ! define physics state variables
       if (add_phys_state) then
-         ! ierr = pio_def_var(file, 'state_ps',        pio_double, dimids_hrz, state_desc_ps)
+         if (mode==1) then
+           ierr = pio_def_var(file, 'state_ps',        pio_double, dimids_hrz, state_desc_ps)
+         end if
          ! ierr = pio_def_var(file, 'state_psdry',     pio_double, dimids_hrz, state_desc_psdry)
          ! ierr = pio_def_var(file, 'state_phis',        pio_double, dimids_hrz, state_desc_phis)
          do m=1,3 !m=1,pcnst
@@ -565,11 +567,12 @@ CONTAINS
       !-------------------------------------------------------------------------
       ! write physics state variables
       if (add_phys_state) then
-
-         ! do i=begchunk,endchunk
-         !    tmp2D(:ncol(i), i) = phys_state(i)%ps(:ncol(i))
-         ! end do
-         ! call pio_write_darray(file, state_desc_ps, iodesc2d, tmp2D, ierr)
+         if (mode==1) then
+           do i=begchunk,endchunk
+              tmp2D(:ncol(i), i) = phys_state(i)%ps(:ncol(i))
+           end do
+           call pio_write_darray(file, state_desc_ps, iodesc2d, tmp2D, ierr)
+         end if
 
          ! do i=begchunk,endchunk
          !    tmp2D(:ncol(i), i) = phys_state(i)%psdry(:ncol(i))
