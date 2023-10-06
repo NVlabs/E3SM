@@ -16,3 +16,7 @@ set(MPIFC "ftn")
 set(SCC "cc")
 set(SCXX "CC")
 set(SFC "ftn")
+
+# FKB (Sungduk Yu, Thu 21 Sep 2023 05:12:11 PM PDT)
+string(APPEND FFLAGS " -I/global/cfs/cdirs/m4331/shared/FKB64/build/include ")
+string(APPEND SLIBS " -L/global/cfs/cdirs/m4331/shared/FKB64/build/lib -lneural ")
