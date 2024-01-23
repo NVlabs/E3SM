@@ -1,3 +1,4 @@
+#ifdef MMF_ML_TRAINING
 module ml_training
 
    ! TODO:
@@ -1169,3 +1170,4 @@ CONTAINS
    end subroutine write_ml_training
    !------------------------------------------------------------------------------------------------
 end module ml_training
+#endif /* MMF_ML_TRAINING */
