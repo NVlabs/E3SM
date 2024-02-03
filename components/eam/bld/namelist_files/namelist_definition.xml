@@ -7928,4 +7928,86 @@ Planetary rotation rate (radians/second). Value set here is ONLY used in the atm
 Default: set to shr_const value
 </entry>
 
+<!-- ========================================================================================  -->
+<!-- climsim_nl: -->
+
+<entry id="inputlength" type="integer" category="climsim"
+       group="climsim_nl" valid_values="" >
+Length of climsim input vector
+</entry>
+
+<entry id="outputlength" type="integer" category="climsim"
+       group="climsim_nl" valid_values="" >
+Length of climsim output vector
+</entry>
+
+<entry id="input_rh" type="logical" category="climsim"
+       group="climsim_nl" valid_values="" >
+Toggle relative humidity
+</entry>
+
+<entry id="cb_use_input_prectm1" type="logical" category="climsim"
+       group="climsim_nl" valid_values="" >
+Use previous time step PRECT for NN input variable
+</entry>
+
+<entry id="cb_fkb_model" type="char*256" category="climsim"
+       group="climsim_nl" valid_values="" >
+Absolute path of a fkb model txt file
+</entry>
+
+<entry id="cb_inp_sub" type="char*256" category="climsim"
+       group="climsim_nl" valid_values="" >
+Absolute path of a input normalization factor txt file (sub)
+</entry>
+
+<entry id="cb_inp_div" type="char*256" category="climsim"
+       group="climsim_nl" valid_values="" >
+Absolute path of a input normalization factor txt file (div)
+</entry>
+
+<entry id="cb_out_scale" type="char*256" category="climsim"
+       group="climsim_nl" valid_values="" >
+Absolute path of an output rescaling factor txt file
+</entry>
+
+<entry id="cb_partial_coupling" type="logical" category="climsim"
+       group="climsim_nl" valid_values="" >
+Toggle partial coupling of NN output;
+cb_partial_coupling_vars should be supplied if this option is .true.
+</entry>
+
+<entry id="cb_partial_coupling_vars" type="char*26(1000)"  category="climsim"
+       group="climsim_nl" valid_values="" >
+List of the names of  NN output variables that couple to GCM,
+if cb_partial_coupling=.true.
+</entry>
+
+<entry id="cb_do_ensemble" type="logical" category="climsim"
+       group="climsim_nl" valid_values="" >
+Toggle ensemble NN inference;
+</entry>
+
+<entry id="cb_ens_size" type="integer" category="climsim"
+       group="climsim_nl" valid_values="" >
+The size of ensemble, i.e., how many FKB models for ens_avg?
+</entry>
+
+<entry id="cb_ens_fkb_model_list" type="char*256(100)"  category="climsim"
+       group="climsim_nl" valid_values="" >
+List of the absolute file path of FKB models.
+Only if cb_do_ensemble=.true.,
+otherwise, cb_fkb_model is used.
+</entry>
+
+<entry id="cb_random_ens_size" type="integer" category="climsim"
+       group="climsim_nl" valid_values="" >
+The size of ensemble member subset, i.e., how many FKB models for ens-avg?
+</entry>
+
+<entry id="cb_nn_var_combo" type="char*256" category="climsim"
+       group="climsim_nl" valid_values="" >
+Nickname for a specific NN input/output variable combination
+</entry>
+
 </namelist_definition>
