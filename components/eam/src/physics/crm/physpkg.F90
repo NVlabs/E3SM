@@ -53,9 +53,9 @@ module physpkg
   public phys_run1      ! First phase of the public run method
   public phys_run2      ! Second phase of the public run method
   public phys_final     ! Public finalization method
-  #ifdef CLIMSIM
+#ifdef CLIMSIM
   public climsim_driver ! CLIMSIM NN-emulation driver
-  #endif
+#endif
   !-----------------------------------------------------------------------------
   ! Private module data
   !-----------------------------------------------------------------------------
