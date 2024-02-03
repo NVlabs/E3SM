@@ -219,7 +219,7 @@ subroutine cam_run1(cam_in, cam_out, yr, mn, dy, sec )
 !
 !-----------------------------------------------------------------------
    
-   use physpkg,          only: phys_run1
+   use physpkg,          only: phys_run1, climsim_driver
    use stepon,           only: stepon_run1
 #if ( defined SPMD )
    use mpishorthand,     only: mpicom
@@ -280,7 +280,13 @@ subroutine cam_run1(cam_in, cam_out, yr, mn, dy, sec )
    call t_barrierf ('sync_phys_run1', mpicom)
    call t_startf ('phys_run1')
 #if defined(MMF_SAMXX) || defined(MMF_PAM)
+
+#ifdef CLIMSIM
+   call climsim_driver(phys_state, dtime, phys_tend, pbuf2d,  cam_in, cam_out)
+#else
    call phys_run1(phys_state, dtime, phys_tend, pbuf2d,  cam_in, cam_out)
+#endif 
+
 #else
    call phys_run1(phys_state, dtime, phys_tend, pbuf2d,  cam_in, cam_out, phys_diag)
 #endif

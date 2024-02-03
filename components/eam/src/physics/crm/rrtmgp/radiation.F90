@@ -85,8 +85,8 @@ module radiation
 
    ! Declare namelist variables as module data. This also sets default values for
    ! namelist variables.
-   integer :: iradsw = -1  ! freq. of shortwave radiation calc in time steps (positive)
-                           ! or hours (negative).
+   integer, public :: iradsw = -1  ! freq. of shortwave radiation calc in time steps (positive)
+                                   ! or hours (negative).
    integer :: iradlw = -1  ! frequency of longwave rad. calc. in time steps (positive)
                            ! or hours (negative).
    integer :: irad_always = 0  ! Specifies length of time in timesteps (positive)
@@ -111,7 +111,7 @@ module radiation
    ! angle calculations. If true, use the radiation timestep for all solar zenith 
    ! angle (cosz) calculations.
    ! TODO: How does this differ if value is .false.?
-   logical :: use_rad_dt_cosz  = .false. 
+   logical, public :: use_rad_dt_cosz  = .false. 
 
    ! Flag to indicate whether to read optics from spa netcdf file
    ! NOTE: added for consistency with RRTMGP; this is non-functioning for RRTMG!

@@ -47,6 +47,10 @@ public :: &
    diag_physvar_ic,    &
    diag_readnl          ! read namelist options
 
+#ifdef CLIMSIM
+public :: diag_climsim_debug   ! output for climsim partial-coupling debugging (sungduk)
+#endif
+
 logical, public :: inithist_all = .false. ! Flag to indicate set of fields to be 
                                           ! included on IC file
                                           !  .false.  include only required fields
@@ -866,6 +870,33 @@ subroutine diag_init()
      wsresp_idx  = pbuf_get_index('wsresp')
      tau_est_idx  = pbuf_get_index('tau_est')
   end if
+
+  !!! sungduk (Wed 04 Oct 2023 03:48:42 PM PDT)
+  !!! For debugging only
+  !!! 0: before SP
+  !!! 1: after  SP
+  !!! 2: after  NN
+  !!! 3: after  partial-coupling
+  do k = 0,3
+     ! state variables
+     ! ascii 48 = "0"
+     call addfld ('state_t_'//char(k+48)     ,(/ 'lev' /), 'A','K       ','Temperature'//' ('//char(k+48)//')')
+     call addfld ('state_q0001_'//char(k+48) ,(/ 'lev' /), 'A','kg/kg   ','Specific humidity'//' ('//char(k+48)//')')
+     call addfld ('state_q0002_'//char(k+48) ,(/ 'lev' /), 'A','kg/kg   ','Cloud liquid'//' ('//char(k+48)//')')
+     call addfld ('state_q0003_'//char(k+48) ,(/ 'lev' /), 'A','kg/kg   ','Cloud ice'//' ('//char(k+48)//')')
+     call addfld ('state_u_'//char(k+48)     ,(/ 'lev' /), 'A','m/s     ','Zonal wind'//' ('//char(k+48)//')')
+     call addfld ('state_v_'//char(k+48)     ,(/ 'lev' /), 'A','m/s     ','Meridional wind'//' ('//char(k+48)//')')
+     ! cam_out variables
+     call addfld ('cam_out_NETSW_'//char(k+48)  ,horiz_only, 'I','W/m2    ','Net shortwave flux at surface'//' ('//char(k+48)//')')
+     call addfld ('cam_out_FLWDS_'//char(k+48)  ,horiz_only, 'I','W/m2    ','Down longwave flux at surface'//' ('//char(k+48)//')')
+     call addfld ('cam_out_SOLL_'//char(k+48)   ,horiz_only, 'I','W/m2    ','Solar downward near infrared direct  to surface'//' ('//char(k+48)//')')
+     call addfld ('cam_out_SOLS_'//char(k+48)   ,horiz_only, 'I','W/m2    ','Direct solar rad on surface (< 0.7)'//' ('//char(k+48)//')')
+     call addfld ('cam_out_SOLLD_'//char(k+48)  ,horiz_only, 'I','W/m2    ','Diffuse solar rad on surface (>= 0.7)'//' ('//char(k+48)//')')
+     call addfld ('cam_out_SOLSD_'//char(k+48)  ,horiz_only, 'I','W/m2    ','Diffuse solar rad on surface (< 0.7)'//' ('//char(k+48)//')')
+     call addfld ('cam_out_PRECSC_'//char(k+48) ,horiz_only, 'A','m/s     ','Convective snow rate'//' ('//char(k+48)//')')
+     call addfld ('cam_out_PRECC_'//char(k+48)  ,horiz_only, 'A','m/s     ','Convective precipitation rate'//' ('//char(k+48)//')')
+     call addfld ('cam_out_PRECL_'//char(k+48)  ,horiz_only, 'A','m/s     ','Stratiform precip rate'//' ('//char(k+48)//')')
+  end do
 
 end subroutine diag_init
 
@@ -2801,5 +2832,58 @@ end subroutine diag_phys_tend_writeout
      es = es*0.01_r8
 
    end subroutine qsat_hPa
+
+#ifdef CLIMSIM
+subroutine diag_climsim_debug (state, cam_out, pbuf, k) ! sungduk
+ !
+ !---------------------------------------------------------------
+ !
+ ! Purpose:  Dump state at four different points
+ !           k=0, Before SP
+ !           k=1, After  SP
+ !           k=2, After  NN
+ !           k=3, After  partial-coupling
+ !
+ !---------------------------------------------------------------
+ !
+ ! Arguments
+ !
+   type(physics_state), intent(in)    :: state
+   type(cam_out_t), intent(in)        :: cam_out
+   type(physics_buffer_desc), pointer :: pbuf(:)
+   integer, intent(in)                :: k
+ !
+ !---------------------------Local workspace-----------------------------
+ !
+   real(r8), pointer :: prec_dp(:), snow_dp(:) ! rain, snow
+   integer :: ixcldice, ixcldliq ! constituent indices for cloud liquid and ice water.
+   integer :: lchnk              ! chunk index
+ !
+ !-----------------------------------------------------------------------
+ !
+   call pbuf_get_field(pbuf, prec_dp_idx, prec_dp)
+   call pbuf_get_field(pbuf, snow_dp_idx, snow_dp)
+   call cnst_get_ind('CLDLIQ', ixcldliq)
+   call cnst_get_ind('CLDICE', ixcldice)
+
+   lchnk = state%lchnk
+
+   call outfld ('state_t_'//char(k+48),        state%t,               pcols, lchnk)
+   call outfld ('state_q0001_'//char(k+48),    state%q(1,1,       1), pcols, lchnk)
+   call outfld ('state_q0002_'//char(k+48),    state%q(1,1,ixcldliq), pcols, lchnk)
+   call outfld ('state_q0003_'//char(k+48),    state%q(1,1,ixcldice), pcols, lchnk)
+   call outfld ('state_u_'//char(k+48),        state%u,               pcols, lchnk)
+   call outfld ('state_v_'//char(k+48),        state%v,               pcols, lchnk)
+   call outfld ('cam_out_NETSW_'//char(k+48),  cam_out%netsw,         pcols, lchnk)
+   call outfld ('cam_out_FLWDS_'//char(k+48),  cam_out%flwds,         pcols, lchnk)
+   call outfld ('cam_out_SOLL_'//char(k+48),   cam_out%soll,          pcols, lchnk)
+   call outfld ('cam_out_SOLS_'//char(k+48),   cam_out%sols,          pcols, lchnk)
+   call outfld ('cam_out_SOLLD_'//char(k+48),  cam_out%solld,         pcols, lchnk)
+   call outfld ('cam_out_SOLSD_'//char(k+48),  cam_out%solsd,         pcols, lchnk)
+   call outfld ('cam_out_PRECSC_'//char(k+48), snow_dp,               pcols, lchnk)
+   call outfld ('cam_out_PRECC_'//char(k+48),  prec_dp,               pcols, lchnk)
+
+end subroutine diag_climsim_debug
+#endif
 
 end module cam_diagnostics
