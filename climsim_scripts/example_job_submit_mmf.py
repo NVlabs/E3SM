@@ -12,77 +12,111 @@ newcase,config,build,clean,submit,continue_run = False,False,False,False,False,F
 
 acct = 'm4331'
 
-case_prefix = 'FKB-rebased-test1'
-# Added extra physics_state and cam_out variables.
+case_prefix = 'example_job_submit_mmf'
+# exe_refcase = ''
 
-top_dir  = os.getenv('HOME')+'/repositories'
-scratch_dir = os.getenv('SCRATCH')
-case_dir = scratch_dir+'/e3sm_mlt_scratch/'
-src_dir  = top_dir+'/E3SM_sungdukyu/' # branch => whannah/mmf/ml-training
+top_dir  = "/climsim"
+case_dir = '/scratch/'
+src_dir  = top_dir+'/E3SM/' 
 # user_cpp = '-DMMF_ML_TRAINING' # for saving ML variables
-user_cpp = '-DCLIMSIM -DCLIMSIM_DIAG_PARTIAL -DCLIMSIMDEBUG ' # NN hybrid test
-# # src_mod_atm_dir = '/global/homes/s/sungduk/repositories/ClimSim-E3SM-Hybrid/'
+#user_cpp = '-DCLIMSIM -DCLIMSIM_CLASSIFIER' # do NN inference, turn on microphysics classifier
+user_cpp = '' # do MMF
+
+pytorch_fortran_path = '/opt/pytorch-fortran'
+os.environ["pytorch_proxy_ROOT"] = pytorch_fortran_path
+os.environ["pytorch_fort_proxy_ROOT"] = pytorch_fortran_path
 
 # RESTART
 runtype = 'startup' # startup, hybrid,  branch
-refdate = '0001-04-01' # only works for branch (and hybrid?)
-
+refdate = '0002-12-30' # only works for branch (and hybrid?)
+reftod = '00000' # or 21600, 43200, 64800
 # clean        = True
 newcase      = True
 config       = True
 build        = True
 submit       = True
-# continue_run = True
+#continue_run = True
 src_mod_atm  = False
 
 debug_mode = False
 
 dtime = 1200 # set to 0 to use a default value 
 
-# stop_opt,stop_n,resub,walltime = 'nmonths',1, 1, '00:30:00'
-stop_opt,stop_n,resub,walltime = 'ndays',15, 0,'00:30:00'
+#stop_opt,stop_n,resub,walltime = 'nmonths',1, 1, '00:30:00'
+stop_opt,stop_n,resub,walltime = 'nmonths',3, 0,'24:00:00'
+#stop_opt,stop_n,resub,walltime = 'ndays',2, 0,'00:30:00'
 
-ne,npg=4,2;  num_nodes=2  ; grid=f'ne{ne}pg{npg}_ne{ne}pg{npg}'
+ne,npg=4,2;  num_nodes=1  ; grid=f'ne{ne}pg{npg}_ne{ne}pg{npg}'
 # ne,npg=30,2; num_nodes=32 ; grid=f'ne{ne}pg{npg}_ne{ne}pg{npg}'
 # ne,npg=30,2; num_nodes=32 ; grid=f'ne{ne}pg{npg}_oECv3' # bi-grid for AMIP or coupled
 
-compset,arch   = 'F2010-MMF1','GNUGPU'
+compset,arch   = 'F2010-MMF1','GNUCPU'
+# compset,arch   = 'F2010-MMF1','GNUGPU'
 # compset,arch   = 'FAQP-MMF1','GNUGPU'
 # compset,arch   = 'F2010-MMF1','CORI';
 # (MMF1: Note that MMF_VT is tunred off for CLIMSIM in $E3SMROOT/components/eam/cime_config/config_component.xml)  
 
-# queue = 'regular'
-queue = 'debug'
+queue = 'regular'
+#queue = 'debug'
 
-case_list = [case_prefix,arch,compset,grid]
+# case_list = [case_prefix,arch,compset,grid]
+case_list = [case_prefix, ]
 
 if debug_mode: case_list.append('debug')
 
 case='.'.join(case_list)
 #---------------------------------------------------------------------------------------------------
 # CLIMSIM
-f_fkb_model   = '/global/homes/s/sungduk/repositories/ClimSim-E3SM-Hybrid/model_wgts/trained_models/'\
-                'backup_phase-11_retrained_models_step2_lot-152_trial_0024.best.h5.linear-out.h5.fkb.txt'
-f_inp_sub     = '/global/u2/s/sungduk/repositories/ClimSim-E3SM-Hybrid/model_wgts/norm_factors/inp_sub.v2.txt'
-f_inp_div     = '/global/u2/s/sungduk/repositories/ClimSim-E3SM-Hybrid/model_wgts/norm_factors/inp_div.v2.txt'
-f_out_scale   = '/global/u2/s/sungduk/repositories/ClimSim-E3SM-Hybrid/model_wgts/norm_factors/out_scale.v2.txt'
+f_torch_model = '/storage/shared_e3sm/saved_models/v5/v5_unet_qstra22_cliprh_huber/model.pt'
+f_torch_model_class = '/storage/shared_e3sm/saved_models/v5/v5_classifier_lr3em4_qnlog_thred1013_smaller2_clip/model.pt'
+f_inp_sub     = '/storage/shared_e3sm/saved_models/v5/v5_unet_qstra22_cliprh_huber/inp_sub.txt'
+f_inp_div     = '/storage/shared_e3sm/saved_models/v5/v5_unet_qstra22_cliprh_huber/inp_div.txt'
+f_out_scale   = '/storage/shared_e3sm/saved_models/v5/v5_unet_qstra22_cliprh_huber/out_scale.txt'
+f_qinput_log = '.true.'
+f_qinput_prune = '.true.'
+f_qoutput_prune = '.true.'
+f_strato_lev = 15
+f_qc_lbd = '/storage/shared_e3sm/normalization/qc_exp_lambda_large.txt'
+f_qi_lbd = '/storage/shared_e3sm/normalization/qi_exp_lambda_large.txt'
+f_qn_lbd = '/storage/shared_e3sm/normalization/qn_exp_lambda_large.txt'
+f_decouple_cloud = '.false.'
+cb_spinup_step = 5
+f_do_limiter = '.false.'
+f_cb_zeroqn_strat = '.true.'
+f_cb_partial_coupling = '.false.'
 
+f_cb_do_ramp = '.false.'
+f_cb_ramp_option = 'step'
+cb_ramp_factor = 1.0
+cb_ramp_step_0steps = 80
+cb_ramp_step_1steps = 10
+cb_do_clip = '.true.'
+cb_do_aggressive_pruning = '.true.'
+
+cb_clip_rhonly = '.true.'
+strato_lev_qinput = 22
+strato_lev_tinput = -1
+
+# check if MMF_ML_TRAINING is in user_cpp, then either no -DCLIMSIM or f_cb_partial_coupling need to be true, otherwise raise error
+if 'MMF_ML_TRAINING' in user_cpp:
+   if 'CLIMSIM' in user_cpp:
+      if f_cb_partial_coupling == '.false.':
+         raise ValueError('If CLIMSIM is used with MMF_ML_TRAINING, f_cb_partial_coupling must be true.')
 #---------------------------------------------------------------------------------------------------
 print('\n  case : '+case+'\n')
 
 if 'CPU' in arch : max_mpi_per_node,atm_nthrds  = 64,1 ; max_task_per_node = 64
-if 'GPU' in arch : max_mpi_per_node,atm_nthrds  =  4,8 ; max_task_per_node = 32
-if arch=='CORI'  : max_mpi_per_node,atm_nthrds  = 64,1
+if 'GPU' in arch : max_mpi_per_node,atm_nthrds  =  2,8 ; max_task_per_node = 16
 atm_ntasks = max_mpi_per_node*num_nodes
 #---------------------------------------------------------------------------------------------------
+case_scripts_dir=f'{case_dir}/{case}' 
 if newcase :
    # case_scripts_dir=f'{case_dir}/{case}/case_scripts' 
    case_scripts_dir=f'{case_dir}/{case}' 
    if os.path.isdir(f'{case_dir}/{case}'): exit('\n'+clr.RED+f'This case already exists: \n{case_dir}/{case}'+clr.END+'\n')
    cmd = f'{src_dir}/cime/scripts/create_newcase -case {case} --script-root {case_scripts_dir} -compset {compset} -res {grid}  '
-   if arch=='GNUCPU' : cmd += f' -mach pm-cpu -compiler gnu    -pecount {atm_ntasks}x{atm_nthrds} '
-   if arch=='GNUGPU' : cmd += f' -mach pm-gpu -compiler gnugpu -pecount {atm_ntasks}x{atm_nthrds} '
-   if arch=='CORI'   : cmd += f' -mach cori-knl -pecount {atm_ntasks}x{atm_nthrds} '
+   if arch=='GNUCPU' : cmd += f' -mach docker-climsim -compiler gnu    -pecount {atm_ntasks}x{atm_nthrds} '
+   if arch=='GNUGPU' : cmd += f' -mach docker-climsim -compiler gnugpu -pecount {atm_ntasks}x{atm_nthrds} '
    run_cmd(cmd)
 os.chdir(f'{case_scripts_dir}')
 if newcase :
@@ -95,17 +129,21 @@ if newcase :
    run_cmd(f'./xmlchange EXEROOT={case_build_dir}')
    run_cmd(f'./xmlchange RUNDIR={case_run_dir}')
    run_cmd(f'./xmlchange DOUT_S_ROOT={short_term_archive_root_dir}')
+   run_cmd('./xmlchange DOUT_S=FALSE')
+   rest_option = 'ndays'
+   run_cmd(f'./xmlchange REST_OPTION={rest_option}')
+   run_cmd('./xmlchange REST_N=30')
    if 'max_mpi_per_node'  in locals(): run_cmd(f'./xmlchange MAX_MPITASKS_PER_NODE={max_mpi_per_node} ')
    if 'max_task_per_node' in locals(): run_cmd(f'./xmlchange MAX_TASKS_PER_NODE={max_task_per_node} ')
 
    # setup branch/hybrid
    if runtype == 'branch':
       run_cmd(f'./xmlchange --file env_run.xml --id RUN_TYPE   --val {runtype}') # 'branch' won't allow change model time steps
-      run_cmd(f'./xmlchange --file env_run.xml --id RUN_REFDIR  --val /pscratch/sd/s/sungduk/e3sm_mlt_scratch/REST.GNUGPU.F2010-MMF1.ne4pg2_ne4pg2/archive/rest/{refdate}-00000')
+      run_cmd(f'./xmlchange --file env_run.xml --id RUN_REFDIR  --val /storage/shared_e3sm/restart_files/{refdate}-{reftod}')
       run_cmd(f'./xmlchange --file env_run.xml --id GET_REFCASE --val TRUE')
-      run_cmd(f'./xmlchange --file env_run.xml --id RUN_REFCASE --val REST.GNUGPU.F2010-MMF1.ne4pg2_ne4pg2')
+      run_cmd(f'./xmlchange --file env_run.xml --id RUN_REFCASE --val E3SM_ML_ne4_rerun.F2010-MMF1')
       run_cmd(f'./xmlchange --file env_run.xml --id RUN_REFDATE --val {refdate}')
-      run_cmd(f'./xmlchange --file env_run.xml --id RUN_REFTOD  --val 00000')
+      run_cmd(f'./xmlchange --file env_run.xml --id RUN_REFTOD  --val {reftod}')
       run_cmd(f'./xmlchange --file env_run.xml --id RUN_STARTDATE --val {refdate}') # only used for startup or hybrid
 
 #---------------------------------------------------------------------------------------------------
@@ -124,29 +162,46 @@ do_aerosol_rad = .false.
 /
 
 &climsim_nl
-inputlength     = 425
-outputlength    = 368
-cb_nn_var_combo = 'v2'
-input_rh        = .false.
-cb_fkb_model    = '{f_fkb_model}'
+inputlength     = 1405
+outputlength    = 308
+cb_nn_var_combo = 'v5'
+input_rh        = .true.
+cb_torch_model  = '{f_torch_model}'
+cb_torch_model_class  = '{f_torch_model_class}'
 cb_inp_sub      = '{f_inp_sub}'
 cb_inp_div      = '{f_inp_div}'
 cb_out_scale    = '{f_out_scale}'
-
-cb_partial_coupling = .true.
+qinput_log   = {f_qinput_log}
+qinput_prune = {f_qinput_prune}
+qoutput_prune = {f_qoutput_prune}
+strato_lev = {f_strato_lev}
+cb_qc_lbd = '{f_qc_lbd}'
+cb_qi_lbd = '{f_qi_lbd}'
+cb_qn_lbd = '{f_qn_lbd}'
+cb_decouple_cloud = {f_decouple_cloud}
+cb_spinup_step = {cb_spinup_step}
+cb_do_limiter = {f_do_limiter}
+cb_partial_coupling = {f_cb_partial_coupling}
 cb_partial_coupling_vars = 'ptend_t', 'ptend_q0001','ptend_q0002','ptend_q0003', 'ptend_u', 'ptend_v', 'cam_out_PRECC', 'cam_out_PRECSC', 'cam_out_NETSW', 'cam_out_FLWDS', 'cam_out_SOLS', 'cam_out_SOLL', 'cam_out_SOLSD', 'cam_out_SOLLD' 
+cb_do_ramp = {f_cb_do_ramp}
+cb_ramp_option = '{f_cb_ramp_option}'
+cb_ramp_factor = {cb_ramp_factor}
+cb_ramp_step_0steps = {cb_ramp_step_0steps}
+cb_ramp_step_1steps = {cb_ramp_step_1steps}
+cb_do_clip = {cb_do_clip}
+cb_do_aggressive_pruning = {cb_do_aggressive_pruning}
+cb_clip_rhonly = {cb_clip_rhonly}
+strato_lev_qinput = {strato_lev_qinput}
+strato_lev_tinput = {strato_lev_tinput}
+cb_zeroqn_strat = {f_cb_zeroqn_strat}
 /
 
 &cam_history_nl
-fincl2 = 'state_t_0:I:I', 'state_q0001_0:I', 'state_q0002_0:I', 'state_q0003_0:I', 'state_u_0:I', 'state_v_0:I', 'cam_out_NETSW_0:I', 'cam_out_FLWDS_0:I', 'cam_out_PRECSC_0:I', 'cam_out_PRECC_0:I', 'cam_out_SOLS_0:I', 'cam_out_SOLL_0:I', 'cam_out_SOLSD_0:I', 'cam_out_SOLLD_0:I'
-fincl3 = 'state_t_1:I', 'state_q0001_1:I', 'state_q0002_1:I', 'state_q0003_1:I', 'state_u_1:I', 'state_v_1:I', 'cam_out_NETSW_1:I', 'cam_out_FLWDS_1:I', 'cam_out_PRECSC_1:I', 'cam_out_PRECC_1:I', 'cam_out_SOLS_1:I', 'cam_out_SOLL_1:I', 'cam_out_SOLSD_1:I', 'cam_out_SOLLD_1:I'
-fincl4 = 'state_t_2:I', 'state_q0001_2:I', 'state_q0002_2:I', 'state_q0003_2:I', 'state_u_2:I', 'state_v_2:I', 'cam_out_NETSW_2:I', 'cam_out_FLWDS_2:I', 'cam_out_PRECSC_2:I', 'cam_out_PRECC_2:I', 'cam_out_SOLS_2:I', 'cam_out_SOLL_2:I', 'cam_out_SOLSD_2:I', 'cam_out_SOLLD_2:I'
-fincl5 = 'state_t_3:I', 'state_q0001_3:I', 'state_q0002_3:I', 'state_q0003_3:I', 'state_u_3:I', 'state_v_3:I', 'cam_out_NETSW_3:I', 'cam_out_FLWDS_3:I', 'cam_out_PRECSC_3:I', 'cam_out_PRECC_3:I', 'cam_out_SOLS_3:I', 'cam_out_SOLL_3:I', 'cam_out_SOLSD_3:I', 'cam_out_SOLLD_3:I'
-
-fincl6 = 'T:I', 'Q:I', 'CLDLIQ:I', 'CLDICE:I', 'U:I', 'V:I', 'TS:I', 'PS:I', 'LHFLX:I', 'SHFLX:I', 'SOLIN:I', 'PRECC:I', 'PRECSC:I'
-
-nhtfrq = 0,1,1,1,1,1
-mfilt  = 0,1,1,1,1,1
+fincl1 = 'CLDICE', 'CLDLIQ'
+fincl2 = 'PRECT', 'PRECC', 'FLUT', 'CLOUD', 'CLDTOT', 'CLDLOW', 'CLDMED', 'CLDHGH', 'LWCF', 'SWCF', 'LHFLX', 'SHFLX', 'TMQ', 'U850', 'T850', 'Z850', 'U500', 'T500', 'Z500', 'T', 'Q', 'U', 'V', 'CLDICE', 'CLDLIQ'
+avgflag_pertape = 'A','A'
+nhtfrq = 0,-24
+mfilt  = 0,1
 /
 
                      ''')
@@ -175,6 +230,9 @@ if build :
    if debug_mode: run_cmd('./xmlchange --file env_build.xml --id DEBUG --val TRUE ')
    if clean : run_cmd('./case.build --clean')
    run_cmd('./case.build')
+
+# run_cmd(f'cp {case_dir}{exe_refcase}/build/e3sm.exe ./build/')
+# run_cmd('./xmlchange BUILD_COMPLETE=TRUE')
 #---------------------------------------------------------------------------------------------------
 if submit : 
    if 'queue' in locals(): run_cmd(f'./xmlchange JOB_QUEUE={queue}')

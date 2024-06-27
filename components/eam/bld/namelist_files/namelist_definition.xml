@@ -8010,4 +8010,149 @@ The size of ensemble member subset, i.e., how many FKB models for ens-avg?
 Nickname for a specific NN input/output variable combination
 </entry>
 
+<entry id="qinput_log" type="logical" category="climsim"
+       group="climsim_nl" valid_values="" >
+toggle to switch from qc/qi to log10(1+1e6*qc/i) input, not implemented
+</entry>
+
+<entry id="qinput_prune" type="logical" category="climsim"
+       group="climsim_nl" valid_values="" >
+prune qc/qi (v4 NN) or qn (total cloud, v5 NN) input in stratosphere
+</entry>
+
+<entry id="qoutput_prune" type="logical" category="climsim"
+       group="climsim_nl" valid_values="" >
+prune qv/qc/qi and/or u/v tendencies output in stratosphere
+</entry>
+
+<entry id="strato_lev" type="integer" category="climsim"
+       group="climsim_nl" valid_values="" >
+define the stratosphere level for pruning
+</entry>
+
+<entry id="cb_torch_model" type="char*256" category="climsim"
+       group="climsim_nl" valid_values="" >
+absolute filepath for a torchscript model txt file
+</entry>
+
+<entry id="cb_torch_model_class" type="char*256" category="climsim"
+       group="climsim_nl" valid_values="" >
+absolute filepath for a torchscript classification model txt file
+</entry>
+
+<entry id="cb_qc_lbd" type="char*256" category="climsim"
+       group="climsim_nl" valid_values="" >
+Absolute path of a txt file containing qc_lbd for exponential input transformation
+</entry>
+
+<entry id="cb_qi_lbd" type="char*256" category="climsim"
+       group="climsim_nl" valid_values="" >
+Absolute path of a txt file containing qi_lbd for exponential input transformation
+</entry>
+
+<entry id="cb_qn_lbd" type="char*256" category="climsim"
+       group="climsim_nl" valid_values="" >
+Absolute path of a txt file containing qn_lbd for exponential input transformation
+</entry>
+
+<entry id="cb_decouple_cloud" type="logical" category="climsim"
+       group="climsim_nl" valid_values="" >
+to set all cloud related input to 0 before send to NN
+</entry>
+
+<entry id="cb_spinup_step" type="integer" category="climsim"
+       group="climsim_nl" valid_values="" >
+steps to call CRM before NN for spinup cloud resolving model
+</entry>
+
+<entry id="cb_limiter_lower" type="char*256" category="climsim"
+       group="climsim_nl" valid_values="" >
+Absolute path of a txt file containing lower bound for NN output on the raw data scale
+</entry>
+
+<entry id="cb_limiter_upper" type="char*256" category="climsim"
+       group="climsim_nl" valid_values="" >
+Absolute path of a txt file containing upper bound for NN output on the raw data scale
+</entry>
+
+<entry id="cb_do_limiter" type="logical" category="climsim"
+       group="climsim_nl" valid_values="" >
+to set whether to use limiter for NN output
+</entry>
+
+<entry id="cb_do_ramp" type="logical" category="climsim"
+       group="climsim_nl" valid_values="" >
+option to turn on customized ratio scheduling, tendency sent to GCM grid would be: ratio * NN output + (1-ratio) * SP output
+</entry>
+
+<entry id="cb_ramp_option" type="char*256" category="climsim"
+       group="climsim_nl" valid_values="" >
+Option to choose ramping schedule; available options are 'constant', 'linear', 'step'
+</entry>
+
+<entry id="cb_ramp_factor" type="real" category="climsim"
+       group="climsim_nl" valid_values="" >
+if choose 'constant' ramping schedule, the factor to multiply the NN output
+</entry>
+
+<entry id="cb_ramp_linear_steps" type="integer" category="climsim"
+       group="climsim_nl" valid_values="" >
+if choose 'linear' ramping schedule, the steps took to transit from 0 to cb_ramp_factor
+</entry>
+
+<entry id="cb_ramp_step_0steps" type="integer" category="climsim"
+       group="climsim_nl" valid_values="" >
+if choose 'step' ramping schedule, the steps took to with 0 NN + 1 CRM output
+</entry>
+
+<entry id="cb_ramp_step_1steps" type="integer" category="climsim"
+       group="climsim_nl" valid_values="" >
+if choose 'step' ramping schedule, the steps took to with cb_ramp_factor NN + 1-cb_ramp_factor SP output
+</entry>
+
+<entry id="cb_do_clip" type="logical" category="climsim"
+       group="climsim_nl" valid_values="" >
+Option to clip input;
+</entry>
+
+<entry id="cb_clip_rhonly" type="logical" category="climsim"
+       group="climsim_nl" valid_values="" >
+Option to clip only rh input;
+</entry>
+
+<entry id="cb_do_aggressive_pruning" type="logical" category="climsim"
+       group="climsim_nl" valid_values="" >
+Option to aggressively prune input;
+</entry>
+
+<entry id="cb_solin_nolag" type="logical" category="climsim"
+       group="climsim_nl" valid_values="" >
+Option have solin/coszr without lag for nn input; should keep as false
+</entry>
+
+<entry id="strato_lev_qinput" type="integer" category="climsim"
+       group="climsim_nl" valid_values="" >
+define the stratosphere level for pruning qv and qi related input
+</entry>
+
+<entry id="strato_lev_tinput" type="integer" category="climsim"
+       group="climsim_nl" valid_values="" >
+define the stratosphere level for pruning t
+</entry>
+
+<entry id="cb_zeroqn_strat" type="logical" category="climsim"
+       group="climsim_nl" valid_values="" >
+Option to set qn=0 in stratosphere;
+</entry>
+
+<entry id="dtheta_thred" type="real" category="climsim"
+       group="climsim_nl" valid_values="" >
+the threshold for dtheta/dt (K/km) to detect tropopause
+</entry>
+
+<entry id="cb_apply_classifier" type="logical" category="climsim"
+       group="climsim_nl" valid_values="" >
+Option to run and apply microphysics classifier;
+</entry>
+
 </namelist_definition>

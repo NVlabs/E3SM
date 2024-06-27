@@ -324,6 +324,13 @@ subroutine diag_init()
    call addfld ('PSL',horiz_only,    'A','Pa','Sea level pressure', &
       standard_name='air_pressure_at_mean_sea_level')
 
+#if defined(MMF_ML_TRAINING) || defined(CLIMSIM)
+   call addfld ('DTPHYS',(/ 'lev' /), 'A','K/s','dT/dt from physics')
+   call addfld ('DQ1PHYS',(/ 'lev' /), 'A','kg/kg/s','dQ1/dt from physics')
+   call addfld ('DQ2PHYS',(/ 'lev' /), 'A','kg/kg/s','dQ2/dt from physics')
+   call addfld ('DQ3PHYS',(/ 'lev' /), 'A','kg/kg/s','dQ3/dt from physics')
+   call addfld ('DUPHYS',(/ 'lev' /), 'A','m/s/s','dU/dt from physics')
+#endif
 
    call addfld ('fixerCLUBB',horiz_only,    'A','J/m2','dTE fixed by CLUBB')
 
@@ -1515,6 +1522,30 @@ end subroutine diag_conv_tend_ini
           psl(:ncol) = psl_tmp(:ncol)
        end if
     end if
+
+#if defined(MMF_ML_TRAINING) || defined(CLIMSIM)
+   ! output physics tendencies
+    if (hist_fld_active('DTPHYS')) then
+       call outfld('DTPHYS   ',state%t_phy(1,:,:), pcols, lchnk)
+    end if
+
+   if (hist_fld_active('DQ1PHYS')) then
+      call outfld('DQ1PHYS   ',state%q_phy(1,:,:,1), pcols, lchnk)
+   end if
+
+   if (hist_fld_active('DQ2PHYS')) then
+      call outfld('DQ2PHYS   ',state%q_phy(1,:,:,2), pcols, lchnk)
+   end if
+
+   if (hist_fld_active('DQ3PHYS')) then
+      call outfld('DQ3PHYS   ',state%q_phy(1,:,:,3), pcols, lchnk)
+   end if
+
+   if (hist_fld_active('DUPHYS')) then
+      call outfld('DUPHYS   ',state%u_phy(1,:,:), pcols, lchnk)
+   end if
+#endif
+
 !
 ! Output T,q,u,v fields on pressure surfaces
 !

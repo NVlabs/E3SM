@@ -7,6 +7,10 @@ file(GLOB F90_SRC   cpp_interface_mod.F90 fft.F90 params.F90 fftpack5.F90 fftpac
 file(GLOB CXX_SRC   *.cpp)
 file(GLOB SAMXX_SRC ${CXX_SRC} ${F90_SRC})
 
+# Require pytorch-fortran libs
+find_package(pytorch_proxy REQUIRED)
+find_package(pytorch_fort_proxy REQUIRED)
+
 # samxx will be a static library
 add_library(samxx STATIC ${SAMXX_SRC})
 if (${USE_CUDA})
@@ -14,7 +18,8 @@ if (${USE_CUDA})
   set_target_properties(samxx PROPERTIES LINKER_LANGUAGE CUDA CUDA_SEPARABLE_COMPILATION OFF CUDA_RESOLVE_DEVICE_SYMBOLS ON)
 endif()
 # samxx needs to link with the yakl library
-target_link_libraries(samxx yakl)
+# also add pytorch-fortran libs
+target_link_libraries(samxx yakl pytorch_fort_proxy pytorch_proxy)
 target_compile_features(samxx PUBLIC cxx_std_14)
 
 # Set fortran compiler flags

@@ -376,17 +376,20 @@
       <modules compiler="nvidia.*">
         <command name="load">PrgEnv-nvidia</command>
         <command name="load">nvidia/22.7</command>
+        <command name="load">pytorch/2.0.1</command>
       </modules>
 
       <modules compiler="gnugpu">
         <command name="load">cudatoolkit/11.7</command>
         <command name="load">craype-accel-nvidia80</command>
+        <command name="load">pytorch/2.0.1</command>
       </modules>
 
       <modules compiler="nvidiagpu">
         <command name="load">cudatoolkit/11.7</command>
         <command name="load">craype-accel-nvidia80</command>
         <command name="load">gcc-mixed/11.2.0</command>
+        <command name="load">pytorch/2.0.1</command>
       </modules>
 
       <modules compiler="gnu">
@@ -5613,6 +5616,47 @@
       <env name="OMPI_ALLOW_RUN_AS_ROOT_CONFIRM">1</env>
       <env name="NETCDF_PATH">/opt/conda</env>
       <env name="PNETCDF_PATH">/opt/conda</env>
+    </environment_variables>
+  </machine>
+
+  <machine MACH="docker-climsim">
+    <DESC>Docker</DESC>
+    <NODENAME_REGEX>docker</NODENAME_REGEX>
+    <OS>LINUX</OS>
+    <PROXY />
+    <COMPILERS>gnu,gnugpu</COMPILERS>
+    <MPILIBS>openmpi</MPILIBS>
+    <PROJECT>CIME</PROJECT>
+    <SAVE_TIMING_DIR>/storage/timings</SAVE_TIMING_DIR>
+    <SAVE_TIMING_DIR_PROJECTS>CIME</SAVE_TIMING_DIR_PROJECTS>
+    <CIME_OUTPUT_ROOT>/storage/cases</CIME_OUTPUT_ROOT>
+    <DIN_LOC_ROOT>/storage/inputdata</DIN_LOC_ROOT>
+    <DIN_LOC_ROOT_CLMFORC>/storage/inputdata-clmforc</DIN_LOC_ROOT_CLMFORC>
+    <DOUT_S_ROOT>/storage/archive/$CASE</DOUT_S_ROOT>
+    <BASELINE_ROOT>/storage/baselines/$COMPILER</BASELINE_ROOT>
+    <CCSM_CPRNC>/storage/tools/cprnc</CCSM_CPRNC>
+    <GMAKE>make</GMAKE>
+    <GMAKE_J>8</GMAKE_J>
+    <TESTS>e3sm_developer</TESTS>
+    <BATCH_SYSTEM>none</BATCH_SYSTEM>
+    <SUPPORTED_BY>climsim</SUPPORTED_BY>
+    <MAX_TASKS_PER_NODE>8</MAX_TASKS_PER_NODE>
+    <MAX_MPITASKS_PER_NODE>8</MAX_MPITASKS_PER_NODE>
+    <mpirun mpilib="openmpi">
+      <executable>mpiexec</executable>
+      <arguments>
+        <arg name="ntasks">-n {{ total_tasks }}</arg>
+        <arg name="oversubscribe">--oversubscribe --allow-run-as-root</arg>
+      </arguments>
+    </mpirun>
+    <module_system type="none" />
+    <RUNDIR>$CASEROOT/run</RUNDIR>
+    <EXEROOT>$CASEROOT/bld</EXEROOT>
+    <environment_variables>
+      <env name="OMPI_ALLOW_RUN_AS_ROOT">1</env>
+      <env name="OMPI_ALLOW_RUN_AS_ROOT_CONFIRM">1</env>
+      <env name="NETCDF_PATH">/opt/netcdf</env>
+      <env name="PNETCDF_PATH">/opt/pnetcdf</env>
     </environment_variables>
   </machine>
 

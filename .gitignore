@@ -1,3 +1,6 @@
+# plot saving directory
+climsim_scripts/figure
+
 # Object files
 *.lo
 *.o

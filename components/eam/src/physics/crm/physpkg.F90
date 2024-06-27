@@ -19,7 +19,8 @@ module physpkg
   use spmd_utils,              only: masterproc, iam
   use physconst,               only: latvap, latice, rh2o
   use physics_types,           only: physics_state, physics_tend, physics_state_set_grid, &
-                                     physics_ptend, physics_type_alloc
+                                     physics_ptend, physics_type_alloc, physics_state_dealloc, physics_tend_dealloc, &
+                                     physics_state_alloc, physics_tend_alloc, physics_state_copy
   use physics_update_mod,      only: physics_update, physics_update_init, hist_vars, nvars_prtrb_hist, get_var
   use phys_grid,               only: get_ncols_p, print_cost_p, update_cost_p
   use phys_gmean,              only: gmean_mass
@@ -712,11 +713,12 @@ end subroutine phys_init
 !===================================================================================================
 
 #ifdef CLIMSIM
-subroutine climsim_driver(phys_state, ztodt, phys_tend, pbuf2d,  cam_in, cam_out)
+subroutine climsim_driver(phys_state, phys_state_aphys1, phys_state_sp, ztodt, phys_tend, pbuf2d,  cam_in, cam_out, cam_out_sp)
   !-----------------------------------------------------------------------------
   ! Purpose: climsim driver
   !-----------------------------------------------------------------------------
-  use climsim,          only: cb_partial_coupling, cb_partial_coupling_vars
+  use climsim,          only: cb_partial_coupling, cb_partial_coupling_vars, cb_spinup_step, cb_do_ramp, cb_ramp_linear_steps, &
+                              cb_ramp_option, cb_ramp_factor, cb_ramp_step_0steps, cb_ramp_step_1steps, cb_solin_nolag
   use physics_buffer,   only: physics_buffer_desc, pbuf_get_chunk, &
                               pbuf_allocate, pbuf_get_index, pbuf_get_field
   use time_manager,     only: get_nstep, get_step_size, & 
@@ -737,15 +739,22 @@ subroutine climsim_driver(phys_state, ztodt, phys_tend, pbuf2d,  cam_in, cam_out
   use geopotential,        only: geopotential_t
   use cam_history_support, only: pflds
   use physconst,        only: cpair, zvir, rair, gravit
+  use string_utils,    only: to_lower
+  use cam_diagnostics,        only: diag_phys_writeout, diag_conv
+  use cloud_diagnostics,      only: cloud_diagnostics_calc
+
   !-----------------------------------------------------------------------------
   ! Interface arguments
   !-----------------------------------------------------------------------------
   real(r8), intent(in) :: ztodt            ! physics time step unless nstep=0
   type(physics_state), intent(inout), dimension(begchunk:endchunk) :: phys_state
+  type(physics_state), intent(in),    dimension(begchunk:endchunk) :: phys_state_aphys1
+  type(physics_state), intent(inout),    dimension(begchunk:endchunk) :: phys_state_sp
   type(physics_tend ), intent(inout), dimension(begchunk:endchunk) :: phys_tend
   type(physics_buffer_desc), pointer, dimension(:,:)               :: pbuf2d
   type(cam_in_t),                     dimension(begchunk:endchunk) :: cam_in
   type(cam_out_t),                    dimension(begchunk:endchunk) :: cam_out
+  type(cam_out_t),      intent(out),      dimension(begchunk:endchunk) :: cam_out_sp
 
   !-----------------------------------------------------------------------------
   ! Local Variables
@@ -773,8 +782,13 @@ subroutine climsim_driver(phys_state, ztodt, phys_tend, pbuf2d,  cam_in, cam_out
   logical :: do_climsim_inference = .false.
 
   ! - for partial coupling - !
-  type(physics_state), dimension(begchunk:endchunk)  :: phys_state_nn
-  type(physics_tend ), dimension(begchunk:endchunk)  :: phys_tend_nn
+! type(physics_state), dimension(begchunk:endchunk)  :: phys_state_nn
+  ! type(physics_state), dimension(begchunk:endchunk)  :: phys_state_sp_backup
+  ! type(physics_tend ), dimension(begchunk:endchunk)  :: phys_tend_nn
+
+  type(physics_state), allocatable, dimension(:)  :: phys_state_nn
+  type(physics_state), allocatable, dimension(:)  :: phys_state_sp_backup
+  type(physics_tend ), allocatable, dimension(:)  :: phys_tend_nn
   type(cam_out_t),     dimension(begchunk:endchunk)  :: cam_out_nn
   integer :: ixcldice, ixcldliq
   integer :: prec_dp_idx, snow_dp_idx
@@ -783,6 +797,7 @@ subroutine climsim_driver(phys_state, ztodt, phys_tend, pbuf2d,  cam_in, cam_out
                                                   prec_dp_mmf, snow_dp_mmf
   logical  :: do_geopotential = .false.
   real(r8) :: zvirv_loc(pcols,pver), rairv_loc(pcols,pver)  
+  real(r8) :: ramp_ratio 
   ! - !
 
   real(r8) :: calday       ! current calendar day
@@ -796,11 +811,41 @@ subroutine climsim_driver(phys_state, ztodt, phys_tend, pbuf2d,  cam_in, cam_out
   real(r8) :: dt_avg = 0.0_r8   ! time step to use for the shr_orb_cosz calculation, if use_rad_dt_cosz set to true
   real(r8) :: delta    ! Solar declination angle  in radians
   real(r8) :: eccf     ! Earth orbit eccentricity factor
+  integer :: ierr=0
 !-----------------------------------------------------------------------------
   ! phys_run1 opening
   ! - phys_timestep_init advances ghg gases,
   ! - need to advance solar insolation (for NN)
   !-----------------------------------------------------------------------------
+
+
+  allocate(phys_state_nn(begchunk:endchunk), stat=ierr)
+   if (ierr /= 0) then
+      ! Handle allocation error
+      write(iulog,*) 'Error allocating phys_state_nn error = ',ierr
+   end if
+
+   allocate(phys_state_sp_backup(begchunk:endchunk), stat=ierr)
+   if (ierr /= 0) then
+      ! Handle allocation error
+      write(iulog,*) 'Error allocating phys_state_sp_backup error = ',ierr
+   end if
+
+   allocate(phys_tend_nn(begchunk:endchunk), stat=ierr)
+    if (ierr /= 0) then
+        ! Handle allocation error
+        write(iulog,*) 'Error allocating phys_tend_nn error = ',ierr
+    end if
+
+    do lchnk=begchunk,endchunk
+      call physics_state_alloc(phys_state_nn(lchnk),lchnk,pcols)
+      call physics_state_alloc(phys_state_sp_backup(lchnk),lchnk,pcols)
+      ! call physics_tend_alloc(phys_tend_nn(lchnk),lchnk,pcols)
+   end do
+
+   do lchnk=begchunk,endchunk
+      call physics_tend_alloc(phys_tend_nn(lchnk),phys_state_nn(lchnk)%psetcols)
+   end do
 
   nstep = get_nstep()
   dtime = get_step_size()
@@ -818,7 +863,11 @@ subroutine climsim_driver(phys_state, ztodt, phys_tend, pbuf2d,  cam_in, cam_out
   call get_variability(sfac)                        ! "
   do lchnk=begchunk,endchunk
      ncol = phys_state(lchnk)%ncol
-     calday = get_curr_calday()
+     if (cb_solin_nolag) then
+      calday = get_curr_calday()
+     else
+      calday = get_curr_calday(-dtime) ! get current calendar day with a negative offset to match the time in mli
+     end if
      ! coszrs
      call get_rlat_all_p(lchnk, ncol, clat)
      call get_rlon_all_p(lchnk, ncol, clon)
@@ -851,7 +900,9 @@ subroutine climsim_driver(phys_state, ztodt, phys_tend, pbuf2d,  cam_in, cam_out
   ! Determine if MMF spin-up perioid is over
   ! (currently spin up time is set at 86400 sec ~ 1 day)
   ! [TO-DO] create a namelist variable for mmf spin-up time
-  nstep_NN = 86400 / get_step_size()
+  ! nstep_NN = 86400 / get_step_size()
+  nstep_NN = cb_spinup_step
+
   if (nstep-nstep0 .eq. nstep_NN) then
      do_climsim_inference = .true.
      if (masterproc) then
@@ -870,7 +921,9 @@ subroutine climsim_driver(phys_state, ztodt, phys_tend, pbuf2d,  cam_in, cam_out
   !Save original values of subroutine arguments
   if (do_climsim_inference .and. cb_partial_coupling) then
      do lchnk = begchunk, endchunk
+      ! since phys_state_sp_backup etc is just allocated but have not been initialized (empty), doing this copy won't lead to memory leak
         phys_state_nn(lchnk) = phys_state(lchnk) 
+        phys_state_sp_backup(lchnk) = phys_state_sp(lchnk)
         phys_tend_nn(lchnk)  = phys_tend(lchnk) 
         cam_out_nn(lchnk)    = cam_out(lchnk) 
      end do
@@ -879,25 +932,16 @@ subroutine climsim_driver(phys_state, ztodt, phys_tend, pbuf2d,  cam_in, cam_out
   ! Run phys_run1 physics
   if (.not. do_climsim_inference) then  ! MMFspin-up
      call phys_run1(phys_state, ztodt, phys_tend, pbuf2d,  cam_in, cam_out)
+     do lchnk = begchunk, endchunk
+        call physics_state_dealloc(phys_state_sp(lchnk)) ! to prevent memory leak
+        call physics_state_copy(phys_state(lchnk), phys_state_sp(lchnk))
+        cam_out_sp(lchnk)    = cam_out(lchnk)
+     end do
 
   else  ! NN inference
      if (cb_partial_coupling) then ! NN partial coupling
 
-#ifdef CLIMSIM_DIAG_PARTIAL
-        write(iulog,*) '[CLIMSIM] Partial coupling, ', nstep
-
-        do lchnk = begchunk, endchunk
-           phys_buffer_chunk => pbuf_get_chunk(pbuf2d, lchnk)
-           call diag_climsim_debug(phys_state(lchnk), cam_out(lchnk), phys_buffer_chunk, 0) ! 0 for 'before physics'
-        end do
-#endif 
         call phys_run1   (phys_state,    ztodt, phys_tend,    pbuf2d, cam_in, cam_out)
-#ifdef CLIMSIM_DIAG_PARTIAL
-        do lchnk = begchunk, endchunk
-           phys_buffer_chunk => pbuf_get_chunk(pbuf2d, lchnk)
-           call diag_climsim_debug(phys_state(lchnk), cam_out(lchnk), phys_buffer_chunk, 1) ! 1 for 'SP calculation'
-        end do
-#endif
         ! store mmf calculation of prec_dp and snow_dp
         do lchnk = begchunk, endchunk
            phys_buffer_chunk => pbuf_get_chunk(pbuf2d, lchnk)
@@ -907,14 +951,21 @@ subroutine climsim_driver(phys_state, ztodt, phys_tend, pbuf2d,  cam_in, cam_out
            snow_dp_mmf(:,lchnk) = snow_dp(:)
         end do
 
-        call phys_run1_NN(phys_state_nn, ztodt, phys_tend_nn, pbuf2d, cam_in, cam_out_nn,&
-                          solin, coszrs)
-#ifdef CLIMSIM_DIAG_PARTIAL
         do lchnk = begchunk, endchunk
-           phys_buffer_chunk => pbuf_get_chunk(pbuf2d, lchnk)
-           call diag_climsim_debug(phys_state_nn(lchnk), cam_out_nn(lchnk), phys_buffer_chunk, 2) ! 2 for 'NN calculation'
+          ! update phys_state_sp but cannot overwrite its the mmf adv and phy history
+          call physics_state_dealloc(phys_state_sp(lchnk))
+          call physics_state_copy(phys_state(lchnk), phys_state_sp(lchnk))
+          phys_state_sp(lchnk)%t_adv(:,:,:) = phys_state_sp_backup(lchnk)%t_adv(:,:,:)
+          phys_state_sp(lchnk)%u_adv(:,:,:) = phys_state_sp_backup(lchnk)%u_adv(:,:,:)
+          phys_state_sp(lchnk)%t_phy(:,:,:) = phys_state_sp_backup(lchnk)%t_phy(:,:,:)
+          phys_state_sp(lchnk)%u_phy(:,:,:) = phys_state_sp_backup(lchnk)%u_phy(:,:,:)
+          phys_state_sp(lchnk)%q_adv(:,:,:,:) = phys_state_sp_backup(lchnk)%q_adv(:,:,:,:)
+          phys_state_sp(lchnk)%q_phy(:,:,:,:) = phys_state_sp_backup(lchnk)%q_phy(:,:,:,:)
+          cam_out_sp(lchnk) = cam_out(lchnk)
         end do
-#endif
+
+        call phys_run1_NN(phys_state_nn, phys_state_aphys1, ztodt, phys_tend_nn, pbuf2d, cam_in, cam_out_nn,&
+                          solin, coszrs)
         ! store nn calculation of prec_dp and snow_dp
         do lchnk = begchunk, endchunk
            phys_buffer_chunk => pbuf_get_chunk(pbuf2d, lchnk)
@@ -927,8 +978,14 @@ subroutine climsim_driver(phys_state, ztodt, phys_tend, pbuf2d,  cam_in, cam_out
         end do
 
      else ! NN full coupling
-        call phys_run1_NN(phys_state, ztodt, phys_tend, pbuf2d,  cam_in, cam_out,&
+        call phys_run1_NN(phys_state, phys_state_aphys1, ztodt, phys_tend, pbuf2d,  cam_in, cam_out,&
                           solin, coszrs)
+        do lchnk = begchunk, endchunk
+          ! in fully nn coupling case (no partial coupling), phys_state_sp is just synced with phys_state but won't be used
+          call physics_state_dealloc(phys_state_sp(lchnk))
+          call physics_state_copy(phys_state(lchnk), phys_state_sp(lchnk))
+          cam_out_sp(lchnk)    = cam_out(lchnk)
+        end do
      end if ! (cb_partial_coupling)
   end if ! (.not. do_climsim_inference)
 
@@ -938,87 +995,122 @@ subroutine climsim_driver(phys_state, ztodt, phys_tend, pbuf2d,  cam_in, cam_out
   !         'cam_out_NETSW', 'cam_out_FLWDS', 'cam_out_PRECSC', 'cam_out_PRECC',
   !         'cam_out_SOLS', 'cam_out_SOLL', 'cam_out_SOLSD', 'cam_out_SOLLD'           ]
   if (do_climsim_inference .and. cb_partial_coupling) then
+  
+    if (cb_do_ramp) then
+      write (iulog,*) 'CLIMSIM partial coupling: cb_ramp_option = ', trim(cb_ramp_option)
+  
+      select case (to_lower(trim(cb_ramp_option)))
+        case('constant')
+          ramp_ratio = cb_ramp_factor
+        case('linear')
+          
+          if (nstep-nstep0-nstep_NN .le. cb_ramp_linear_steps) then
+            ramp_ratio = cb_ramp_factor * (nstep-nstep0-nstep_NN)*1.0/(cb_ramp_linear_steps*1.0)
+          else
+            ramp_ratio = cb_ramp_factor
+          end if
+        case('step')
+          
+          if (mod(nstep-nstep0-nstep_NN, (cb_ramp_step_0steps + cb_ramp_step_1steps)) .le. cb_ramp_step_1steps) then
+            ramp_ratio = cb_ramp_factor
+          else
+            ramp_ratio = 0.0
+          end if
+      end select
+    else
+      ramp_ratio = 1.0
+    end if
+    
+    if (cb_do_ramp) then
+      write (iulog,*) 'CLIMSIM partial coupling: cb_do_ramp is on'
+      write (iulog,*) 'CLIMSIM partial coupling: 1 is fully NN, ramp_ratio = ', ramp_ratio
+      write (iulog,*) 'CLIMSIM partial coupling: cb_ramp_option = ', trim(cb_ramp_option)
+    else
+      write (iulog,*) 'CLIMSIM partial coupling: cb_do_ramp is off'
+      write (iulog,*) 'CLIMSIM partial coupling: 1 is fully NN, ramp_ratio = ', ramp_ratio
+    end if
+
      call cnst_get_ind('CLDICE', ixcldice)
      call cnst_get_ind('CLDLIQ', ixcldliq)
      do c = begchunk, endchunk
         k = 1
         do while (k < pflds  .and. cb_partial_coupling_vars(k) /= ' ')
            if (trim(cb_partial_coupling_vars(k)) == 'ptend_t') then
-              phys_state(c)%t(:,:)   = phys_state_nn(c)%t(:,:)
-              phys_tend(c)%dtdt(:,:) = phys_tend_nn(c)%dtdt(:,:)
+              phys_state(c)%t(:,:)   = phys_state_nn(c)%t(:,:)*ramp_ratio + phys_state(c)%t(:,:)*(1.0_r8-ramp_ratio)
+              phys_tend(c)%dtdt(:,:) = phys_tend_nn(c)%dtdt(:,:)*ramp_ratio + phys_tend(c)%dtdt(:,:)*(1.0_r8-ramp_ratio)
               do_geopotential = .true.
               if (nstep-nstep0 .eq. nstep_NN .and. masterproc) then
                  write (iulog,*) 'CLIMSIM partial coupling: ', trim(cb_partial_coupling_vars(k))
               endif
            else if (trim(cb_partial_coupling_vars(k)) == 'ptend_q0001') then
-              phys_state(c)%q(:,:,1) = phys_state_nn(c)%q(:,:,1) 
+              phys_state(c)%q(:,:,1) = phys_state_nn(c)%q(:,:,1)*ramp_ratio + phys_state(c)%q(:,:,1)*(1.0_r8-ramp_ratio) 
               do_geopotential = .true.
               if (nstep-nstep0 .eq. nstep_NN .and. masterproc) then
                  write (iulog,*) 'CLIMSIM partial coupling: ', trim(cb_partial_coupling_vars(k))
               endif
            else if (trim(cb_partial_coupling_vars(k)) == 'ptend_q0002') then
-              phys_state(c)%q(:,:,ixcldliq) = phys_state_nn(c)%q(:,:,ixcldliq)
+              phys_state(c)%q(:,:,ixcldliq) = phys_state_nn(c)%q(:,:,ixcldliq)*ramp_ratio + phys_state(c)%q(:,:,ixcldliq)*(1.0_r8-ramp_ratio)
               if (nstep-nstep0 .eq. nstep_NN .and. masterproc) then
                  write (iulog,*) 'CLIMSIM partial coupling: ', trim(cb_partial_coupling_vars(k))
               endif
            else if (trim(cb_partial_coupling_vars(k)) == 'ptend_q0003') then
-              phys_state(c)%q(:,:,ixcldice) = phys_state_nn(c)%q(:,:,ixcldice)
+              phys_state(c)%q(:,:,ixcldice) = phys_state_nn(c)%q(:,:,ixcldice)*ramp_ratio + phys_state(c)%q(:,:,ixcldice)*(1.0_r8-ramp_ratio)
               if (nstep-nstep0 .eq. nstep_NN .and. masterproc) then
                  write (iulog,*) 'CLIMSIM partial coupling: ', trim(cb_partial_coupling_vars(k))
               endif
            else if (trim(cb_partial_coupling_vars(k)) == 'ptend_u') then
-              phys_state(c)%u(:,:)   = phys_state_nn(c)%u(:,:)
-              phys_tend(c)%dudt(:,:) = phys_tend_nn(c)%dudt(:,:)
+              phys_state(c)%u(:,:)   = phys_state_nn(c)%u(:,:)*ramp_ratio + phys_state(c)%u(:,:)*(1.0_r8-ramp_ratio)
+              phys_tend(c)%dudt(:,:) = phys_tend_nn(c)%dudt(:,:)*ramp_ratio + phys_tend(c)%dudt(:,:)*(1.0_r8-ramp_ratio)
               if (nstep-nstep0 .eq. nstep_NN .and. masterproc) then
                  write (iulog,*) 'CLIMSIM partial coupling: ', trim(cb_partial_coupling_vars(k))
               endif
            else if (trim(cb_partial_coupling_vars(k)) == 'ptend_v') then
-              phys_state(c)%v(:,:)   = phys_state_nn(c)%v(:,:)
-              phys_tend(c)%dvdt(:,:) = phys_tend_nn(c)%dvdt(:,:)
+              phys_state(c)%v(:,:)   = phys_state_nn(c)%v(:,:)*ramp_ratio + phys_state(c)%v(:,:)*(1.0_r8-ramp_ratio)
+              phys_tend(c)%dvdt(:,:) = phys_tend_nn(c)%dvdt(:,:)*ramp_ratio + phys_tend(c)%dvdt(:,:)*(1.0_r8-ramp_ratio)
               if (nstep-nstep0 .eq. nstep_NN .and. masterproc) then
                  write (iulog,*) 'CLIMSIM partial coupling: ', trim(cb_partial_coupling_vars(k))
               endif
            else if (trim(cb_partial_coupling_vars(k)) == 'cam_out_NETSW') then
-              cam_out(c)%netsw(:) = cam_out_nn(c)%netsw(:)
+              cam_out(c)%netsw(:) = cam_out_nn(c)%netsw(:)*ramp_ratio + cam_out(c)%netsw(:)*(1.0_r8-ramp_ratio)
               if (nstep-nstep0 .eq. nstep_NN .and. masterproc) then
                  write (iulog,*) 'CLIMSIM partial coupling: ', trim(cb_partial_coupling_vars(k))
               endif
            else if (trim(cb_partial_coupling_vars(k)) == 'cam_out_FLWDS') then
-              cam_out(c)%flwds(:) = cam_out_nn(c)%flwds(:)
+              cam_out(c)%flwds(:) = cam_out_nn(c)%flwds(:)*ramp_ratio + cam_out(c)%flwds(:)*(1.0_r8-ramp_ratio)
               if (nstep-nstep0 .eq. nstep_NN .and. masterproc) then
                  write (iulog,*) 'CLIMSIM partial coupling: ', trim(cb_partial_coupling_vars(k))
               endif
            else if (trim(cb_partial_coupling_vars(k)) == 'cam_out_SOLS') then
-              cam_out(c)%sols(:) = cam_out_nn(c)%sols(:)
+              cam_out(c)%sols(:) = cam_out_nn(c)%sols(:)*ramp_ratio + cam_out(c)%sols(:)*(1.0_r8-ramp_ratio)
               if (nstep-nstep0 .eq. nstep_NN .and. masterproc) then
                  write (iulog,*) 'CLIMSIM partial coupling: ', trim(cb_partial_coupling_vars(k))
               endif
            else if (trim(cb_partial_coupling_vars(k)) == 'cam_out_SOLL') then
-              cam_out(c)%soll(:) = cam_out_nn(c)%soll(:)
+              cam_out(c)%soll(:) = cam_out_nn(c)%soll(:)*ramp_ratio + cam_out(c)%soll(:)*(1.0_r8-ramp_ratio)
               if (nstep-nstep0 .eq. nstep_NN .and. masterproc) then
                  write (iulog,*) 'CLIMSIM partial coupling: ', trim(cb_partial_coupling_vars(k))
               endif
            else if (trim(cb_partial_coupling_vars(k)) == 'cam_out_SOLSD') then
-              cam_out(c)%solsd(:) = cam_out_nn(c)%solsd(:)
+              cam_out(c)%solsd(:) = cam_out_nn(c)%solsd(:)*ramp_ratio + cam_out(c)%solsd(:)*(1.0_r8-ramp_ratio)
               if (nstep-nstep0 .eq. nstep_NN .and. masterproc) then
                  write (iulog,*) 'CLIMSIM partial coupling: ', trim(cb_partial_coupling_vars(k))
               endif
            else if (trim(cb_partial_coupling_vars(k)) == 'cam_out_SOLLD') then
-              cam_out(c)%solld(:) = cam_out_nn(c)%solld(:)
+              cam_out(c)%solld(:) = cam_out_nn(c)%solld(:)*ramp_ratio + cam_out(c)%solld(:)*(1.0_r8-ramp_ratio)
               if (nstep-nstep0 .eq. nstep_NN .and. masterproc) then
                  write (iulog,*) 'CLIMSIM partial coupling: ', trim(cb_partial_coupling_vars(k))
               endif
            else if (trim(cb_partial_coupling_vars(k)) == 'cam_out_PRECSC') then
               phys_buffer_chunk => pbuf_get_chunk(pbuf2d, c)
               call pbuf_get_field(phys_buffer_chunk, snow_dp_idx, snow_dp)
-              snow_dp(:) = snow_dp_nn(:,c) 
+              snow_dp(:) = snow_dp_nn(:,c)*ramp_ratio + snow_dp(:)*(1.0_r8-ramp_ratio) 
               if (nstep-nstep0 .eq. nstep_NN .and. masterproc) then
                  write (iulog,*) 'CLIMSIM partial coupling: ', trim(cb_partial_coupling_vars(k))
               endif
            else if (trim(cb_partial_coupling_vars(k)) == 'cam_out_PRECC') then
               phys_buffer_chunk => pbuf_get_chunk(pbuf2d, c)
               call pbuf_get_field(phys_buffer_chunk, prec_dp_idx, prec_dp)
-              prec_dp(:) = prec_dp_nn(:,c) 
+              prec_dp(:) = prec_dp_nn(:,c)*ramp_ratio + prec_dp(:)*(1.0_r8-ramp_ratio) 
               if (nstep-nstep0 .eq. nstep_NN .and. masterproc) then
                  write (iulog,*) 'CLIMSIM partial coupling: ', trim(cb_partial_coupling_vars(k))
               endif
@@ -1044,16 +1136,23 @@ subroutine climsim_driver(phys_state, ztodt, phys_tend, pbuf2d,  cam_in, cam_out
         end if ! (do_geopotential)
 
      end do ! c
-
-#ifdef CLIMSIM_DIAG_PARTIAL
-    do lchnk = begchunk, endchunk
-       phys_buffer_chunk => pbuf_get_chunk(pbuf2d, lchnk)
-       call diag_climsim_debug(phys_state(lchnk), cam_out(lchnk), phys_buffer_chunk, 3) ! 3 for 'after partial coupling'
-    end do
-#endif
   end if ! (cb_partial coupling)
 
+  ! copy from the tphysbc2 to here. make sure the outputted history file is consistent with the partial coupling
+  do lchnk=begchunk, endchunk
+    phys_buffer_chunk => pbuf_get_chunk(pbuf2d, lchnk)
+    call t_startf('bc_history_write')
+    call diag_phys_writeout(phys_state(lchnk), cam_out(lchnk)%psl)
+    call diag_conv(phys_state(lchnk), ztodt, phys_buffer_chunk)
+    call t_stopf('bc_history_write')
 
+    !-----------------------------------------------------------------------------
+    ! Write cloud diagnostics on history file
+    !-----------------------------------------------------------------------------
+    call t_startf('bc_cld_diag_history_write')
+    call cloud_diagnostics_calc(phys_state(lchnk), phys_buffer_chunk)
+    call t_stopf('bc_cld_diag_history_write')
+  end do 
   !-----------------------------------------------------------------------------
   ! phys_run1 closing
   ! - tphysbc2 diagnostic (including cam_export)
@@ -1070,10 +1169,19 @@ subroutine climsim_driver(phys_state, ztodt, phys_tend, pbuf2d,  cam_in, cam_out
      call diag_export(cam_out(lchnk))
   end do
 
+  do lchnk=begchunk,endchunk
+    call physics_state_dealloc(phys_state_nn(lchnk))
+    call physics_state_dealloc(phys_state_sp_backup(lchnk))
+    call physics_tend_dealloc(phys_tend_nn(lchnk))
+  end do
+  deallocate(phys_state_nn)
+  deallocate(phys_state_sp_backup)
+  deallocate(phys_tend_nn)
+
 end subroutine climsim_driver
 
 
-subroutine phys_run1_NN(phys_state, ztodt, phys_tend, pbuf2d,  cam_in, cam_out, &
+subroutine phys_run1_NN(phys_state, phys_state_aphys1, ztodt, phys_tend, pbuf2d,  cam_in, cam_out, &
                         solin, coszrs)
   !-----------------------------------------------------------------------------
   ! Purpose: First part of atmos physics before updating of surface components
@@ -1089,6 +1197,7 @@ subroutine phys_run1_NN(phys_state, ztodt, phys_tend, pbuf2d,  cam_in, cam_out, 
   !-----------------------------------------------------------------------------
   real(r8), intent(in) :: ztodt            ! physics time step unless nstep=0
   type(physics_state), intent(inout), dimension(begchunk:endchunk) :: phys_state
+  type(physics_state), intent(in),    dimension(begchunk:endchunk) :: phys_state_aphys1
   type(physics_tend ), intent(inout), dimension(begchunk:endchunk) :: phys_tend
 
   type(physics_buffer_desc), pointer, dimension(:,:) :: pbuf2d
@@ -1123,6 +1232,14 @@ subroutine phys_run1_NN(phys_state, ztodt, phys_tend, pbuf2d,  cam_in, cam_out, 
   ! phys_run1 opening
   !-----------------------------------------------------------------------------
   nstep = get_nstep()
+
+    ! Set physics tendencies to 0
+  do lchnk=begchunk, endchunk
+    ncol = phys_state(lchnk)%ncol
+    phys_tend(lchnk)%dtdt(:ncol,:pver)  = 0._r8
+    phys_tend(lchnk)%dudt(:ncol,:pver)  = 0._r8
+    phys_tend(lchnk)%dvdt(:ncol,:pver)  = 0._r8
+ end do
 
   ! The following initialization depends on the import state (cam_in)
   ! being initialized.  This isn't true when cam_init is called, so need
@@ -1161,11 +1278,11 @@ subroutine phys_run1_NN(phys_state, ztodt, phys_tend, pbuf2d,  cam_in, cam_out, 
   !-----------------------------------------------------------------------------
   do lchnk=begchunk, endchunk
      phys_buffer_chunk => pbuf_get_chunk(pbuf2d, lchnk)
-     call neural_net (ptend, phys_state(lchnk), &
+     call neural_net (ptend, phys_state(lchnk), phys_state_aphys1(lchnk), &
                       phys_buffer_chunk, &
                       cam_in(lchnk), cam_out(lchnk), &
                       coszrs(:,lchnk), solin(:,lchnk), &
-                      ztodt)
+                      ztodt, lchnk)
      call physics_update (phys_state(lchnk), ptend, ztodt, phys_tend(lchnk))
   end do
 
@@ -1493,6 +1610,9 @@ subroutine phys_final( phys_state, phys_tend, pbuf2d )
   type(physics_state),       pointer :: phys_state(:)
   type(physics_tend ),       pointer :: phys_tend(:)
   type(physics_buffer_desc), pointer :: pbuf2d(:,:)
+
+  integer :: lchnk
+  
   !---------------------------------------------------------------------------
   !---------------------------------------------------------------------------
 
@@ -1500,9 +1620,16 @@ subroutine phys_final( phys_state, phys_tend, pbuf2d )
      call pbuf_deallocate(pbuf2d,'global')
      deallocate(pbuf2d)
   end if
+
+
+  do lchnk=begchunk,endchunk
+    call physics_state_dealloc(phys_state(lchnk))
+    call physics_tend_dealloc(phys_tend(lchnk))
+ end do
+
   deallocate(phys_state)
   deallocate(phys_tend)
-
+  
   call t_startf ('chem_final')
   call chem_final
   call t_stopf ('chem_final')
@@ -2323,6 +2450,9 @@ subroutine tphysbc2(ztodt, fsns, fsnt, flns, flnt, &
     end if
   end if ! l_tracer_aero
 
+#ifndef CLIMSIM
+! in climsim_driver, this block is included, so need to skip when CLIMSIM is defined
+! even not executing this block, it won't influence the radiation_tend, which won't use cam_out%psl
   !-----------------------------------------------------------------------------
   ! Moist physical parameteriztions complete: 
   ! send dynamical variables, and derived variables to history file
@@ -2338,6 +2468,7 @@ subroutine tphysbc2(ztodt, fsns, fsnt, flns, flnt, &
   call t_startf('bc_cld_diag_history_write')
   call cloud_diagnostics_calc(state, pbuf)
   call t_stopf('bc_cld_diag_history_write')
+#endif
 
   !-----------------------------------------------------------------------------
   ! Radiation computations
@@ -2352,6 +2483,7 @@ subroutine tphysbc2(ztodt, fsns, fsnt, flns, flnt, &
 
     ! We don't need to call physics_update or check_energy_chng for the MMF
     ! because the radiative tendency is added within the call to crm_physics_tend
+    ! seems that it will update the crm_rad etc in pbuf, this will update the state in the next call to crm_physics_tend and crm_module
 
   end if ! l_rad
 
@@ -2364,6 +2496,7 @@ subroutine tphysbc2(ztodt, fsns, fsnt, flns, flnt, &
   if(do_aerocom_ind3) call cloud_top_aerocom(state, pbuf) 
 
 #ifndef CLIMSIM
+! in climsim_driver, this block is included, so need to skip when CLIMSIM is defined
   ! Diagnose the location of the tropopause
   call tropopause_output(state)
 

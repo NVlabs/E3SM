@@ -63,7 +63,12 @@ module physics_types
           lchnk,                &! chunk index
           ngrdcol,              &! -- Grid        -- number of active columns (on the grid)
           psetcols=0,           &! --             -- max number of columns set - if subcols = pcols*psubcols, else = pcols
+#if defined(MMF_ML_TRAINING) || defined(CLIMSIM)
+          ncol=0,               &! --             -- sum of nsubcol for all ngrdcols - number of active columns
+          ntracker=2             ! --             -- the number of previous steps' adv/sfc forcing and previous phys tendencies
+#else
           ncol=0                 ! --             -- sum of nsubcol for all ngrdcols - number of active columns
+#endif
      real(r8), dimension(:), allocatable         :: &
           lat,     &! latitude (radians)
           lon,     &! longitude (radians)
@@ -91,6 +96,26 @@ module physics_types
 
      real(r8), dimension(:,:,:),allocatable      :: &
           q         ! constituent mixing ratio (kg/kg moist or dry air depending on type)
+
+#if defined(MMF_ML_TRAINING) || defined(CLIMSIM)
+      real(r8), dimension(:,:,:),allocatable      :: &
+         t_adv,   &
+         u_adv,   &
+         t_phy,   &
+         u_phy
+      
+      real(r8), dimension(:,:,:,:),allocatable      :: &
+         q_adv,   &
+         q_phy
+      
+      real(r8), dimension(:,:),allocatable      :: &
+      tm_ps,   &
+      tm_solin,   &
+      tm_lhf,  &
+      tm_shf,  &
+      tm_coszn
+#endif
+
 
      real(r8), dimension(:,:),allocatable        :: &
           pint,    &! interface pressure (Pa)
@@ -1355,12 +1380,17 @@ end subroutine physics_ptend_copy
     ! Local variables
     !
     integer i, k, m, ncol
+#if defined(MMF_ML_TRAINING) || defined(CLIMSIM)
+    integer j, ntracker
+
+    ntracker = state_in%ntracker
+#endif
 
     ! Allocate state_out with same subcol dimension as state_in
     call physics_state_alloc ( state_out, state_in%lchnk, state_in%psetcols)
 
     ncol = state_in%ncol
-    
+
     state_out%psetcols = state_in%psetcols
     state_out%ngrdcol  = state_in%ngrdcol
     state_out%lchnk    = state_in%lchnk
@@ -1426,6 +1456,40 @@ end subroutine physics_ptend_copy
           state_out%zm(i,k)        = state_in%zm(i,k)
        end do
     end do
+
+#if defined(MMF_ML_TRAINING) || defined(CLIMSIM)
+    do j = 1,ntracker
+      do k = 1, pver
+         do i = 1, ncol
+            state_out%t_adv(j,i,k) = state_in%t_adv(j,i,k)
+            state_out%u_adv(j,i,k) = state_in%u_adv(j,i,k)
+            state_out%t_phy(j,i,k) = state_in%t_phy(j,i,k)
+            state_out%u_phy(j,i,k) = state_in%u_phy(j,i,k)
+         end do
+      end do
+   end do
+
+   do j = 1,ntracker
+      do m = 1, pcnst
+         do k = 1, pver
+            do i = 1, ncol
+               state_out%q_adv(j,i,k,m) = state_in%q_adv(j,i,k,m) 
+               state_out%q_phy(j,i,k,m) = state_in%q_phy(j,i,k,m) 
+            end do
+         end do
+      end do
+   end do
+
+   do j = 1,ntracker
+      do i = 1, ncol
+         state_out%tm_ps(j,i) = state_in%tm_ps(j,i)
+         state_out%tm_solin(j,i) = state_in%tm_solin(j,i)
+         state_out%tm_coszn(j,i) = state_in%tm_coszn(j,i)
+         state_out%tm_lhf(j,i) = state_in%tm_lhf(j,i)
+         state_out%tm_shf(j,i) = state_in%tm_shf(j,i)
+      end do
+   end do
+#endif 
 
     do k = 1, pverp
        do i = 1, ncol
@@ -1634,10 +1698,18 @@ subroutine physics_state_alloc(state,lchnk,psetcols)
 
   integer :: ierr=0, i
 
+#if defined(MMF_ML_TRAINING) || defined(CLIMSIM)
+  integer :: ptracker
+
+  !#number of steps to track in the past for some variables
+  state%ntracker = 2 
+  ptracker = state%ntracker
+#endif
+
   state%lchnk    = lchnk
   state%psetcols = psetcols
   state%ngrdcol  = get_ncols_p(lchnk)  ! Number of grid columns
-
+  
   !----------------------------------
   ! Following variables will be overwritten by sub-column generator, if sub-columns are being used
 
@@ -1740,6 +1812,41 @@ subroutine physics_state_alloc(state,lchnk,psetcols)
   
   allocate(state%tw_cur(psetcols), stat=ierr)
   if ( ierr /= 0 ) call endrun('physics_state_alloc error: allocation error for state%tw_cur')
+
+#if defined(MMF_ML_TRAINING) || defined(CLIMSIM)
+  allocate(state%t_adv(ptracker, psetcols,pver), stat=ierr)
+  if ( ierr /= 0 ) call endrun('physics_state_alloc error: allocation error for state%t_adv')
+  
+  allocate(state%u_adv(ptracker, psetcols,pver), stat=ierr)
+  if ( ierr /= 0 ) call endrun('physics_state_alloc error: allocation error for state%u_adv')
+
+  allocate(state%q_adv(ptracker, psetcols,pver, pcnst), stat=ierr)
+  if ( ierr /= 0 ) call endrun('physics_state_alloc error: allocation error for state%q_adv')
+  
+  allocate(state%q_phy(ptracker, psetcols,pver, pcnst), stat=ierr)
+  if ( ierr /= 0 ) call endrun('physics_state_alloc error: allocation error for state%q_phy')
+  
+  allocate(state%t_phy(ptracker, psetcols,pver), stat=ierr)
+  if ( ierr /= 0 ) call endrun('physics_state_alloc error: allocation error for state%t_phy')
+  
+  allocate(state%u_phy(ptracker, psetcols,pver), stat=ierr)
+  if ( ierr /= 0 ) call endrun('physics_state_alloc error: allocation error for state%u_phy')
+
+  allocate(state%tm_ps(ptracker, psetcols), stat=ierr)
+  if ( ierr /= 0 ) call endrun('physics_state_alloc error: allocation error for state%tm_ps')
+  
+  allocate(state%tm_solin(ptracker, psetcols), stat=ierr)
+  if ( ierr /= 0 ) call endrun('physics_state_alloc error: allocation error for state%tm_solin')
+
+  allocate(state%tm_coszn(ptracker, psetcols), stat=ierr)
+  if ( ierr /= 0 ) call endrun('physics_state_alloc error: allocation error for state%tm_coszn')
+
+  allocate(state%tm_lhf(ptracker, psetcols), stat=ierr)
+  if ( ierr /= 0 ) call endrun('physics_state_alloc error: allocation error for state%tm_lhf')
+
+  allocate(state%tm_shf(ptracker, psetcols), stat=ierr)
+  if ( ierr /= 0 ) call endrun('physics_state_alloc error: allocation error for state%tm_shf')
+#endif
 
   if(print_additional_diagn_phys_control)then
      allocate(state%te_before_physstep(psetcols), stat=ierr)
@@ -1854,6 +1961,20 @@ subroutine physics_state_alloc(state,lchnk,psetcols)
   state%exner(:,:) = inf
   state%zm(:,:) = inf
   state%q(:,:,:) = inf
+
+#if defined(MMF_ML_TRAINING) || defined(CLIMSIM)
+  state%t_adv(:,:,:) = inf
+  state%u_adv(:,:,:) = inf
+  state%t_phy(:,:,:) = 0.0
+  state%u_phy(:,:,:) = 0.0
+  state%q_adv(:,:,:,:) = inf
+  state%q_phy(:,:,:,:) = 0.0
+  state%tm_ps(:,:) = inf
+  state%tm_solin(:,:) = inf
+  state%tm_lhf(:,:) = inf
+  state%tm_shf(:,:) = inf
+  state%tm_coszn(:,:) = inf
+#endif 
       
   state%pint(:,:) = inf
   state%pintdry(:,:) = inf
@@ -2005,6 +2126,41 @@ subroutine physics_state_dealloc(state)
   
   deallocate(state%tw_cur, stat=ierr)
   if ( ierr /= 0 ) call endrun('physics_state_dealloc error: deallocation error for state%tw_cur')
+
+#if defined(MMF_ML_TRAINING) || defined(CLIMSIM)
+  deallocate(state%t_adv, stat=ierr)
+  if ( ierr /= 0 ) call endrun('physics_state_alloc error: deallocation error for state%t_adv')
+  
+  deallocate(state%u_adv, stat=ierr)
+  if ( ierr /= 0 ) call endrun('physics_state_alloc error: deallocation error for state%u_adv')
+
+  deallocate(state%q_adv, stat=ierr)
+  if ( ierr /= 0 ) call endrun('physics_state_alloc error: deallocation error for state%q_adv')
+  
+  deallocate(state%q_phy, stat=ierr)
+  if ( ierr /= 0 ) call endrun('physics_state_alloc error: deallocation error for state%q_phy')
+  
+  deallocate(state%t_phy, stat=ierr)
+  if ( ierr /= 0 ) call endrun('physics_state_alloc error: deallocation error for state%t_phy')
+  
+  deallocate(state%u_phy, stat=ierr)
+  if ( ierr /= 0 ) call endrun('physics_state_alloc error: deallocation error for state%u_phy')
+
+  deallocate(state%tm_ps, stat=ierr)
+  if ( ierr /= 0 ) call endrun('physics_state_alloc error: deallocation error for state%tm_ps')
+  
+  deallocate(state%tm_solin, stat=ierr)
+  if ( ierr /= 0 ) call endrun('physics_state_alloc error: deallocation error for state%tm_solin')
+
+  deallocate(state%tm_coszn, stat=ierr)
+  if ( ierr /= 0 ) call endrun('physics_state_alloc error: deallocation error for state%tm_coszn')
+
+  deallocate(state%tm_lhf, stat=ierr)
+  if ( ierr /= 0 ) call endrun('physics_state_alloc error: deallocation error for state%tm_lhf')
+
+  deallocate(state%tm_shf, stat=ierr)
+  if ( ierr /= 0 ) call endrun('physics_state_alloc error: deallocation error for state%tm_shf')
+#endif
 
   if(print_additional_diagn_phys_control)then
      deallocate(state%te_before_physstep, stat=ierr)
