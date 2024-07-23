@@ -1,9 +1,5 @@
 # E3SM MMF-NN-Emulator Version
 
-**Contact**: 
-- Zeyuan Hu (zeyuan_hu@fas.harvard.com)
-- Akshay Subramaniam (asubramaniam@nvidia.com)
-
 ## Outline
 
 1. [Quick Start](#1-quick-start)
@@ -49,8 +45,6 @@ Currently, there are two main CPP flags in the example job submission scripts th
 - **NN Mode**: Turn on `MMF_NN_EMULATOR` by set `user_cpp = '-DMMF_NN_EMULATOR'`. `MMF_NN_EMULATOR` will use NN to replace CRM calculations.
 
 ### 2.2 Partial Coupling Running Modes
-
-This partial coupling option is initially developed by Sungduk Yu (sungduk.yu@intel.com).
 
 - **NN Mode + Partial Coupling**: `user_cpp = '-DMMF_NN_EMULATOR'` and set namelist `cb_partial_coupling = '.true.'`. In this mode, the E3SM will do both NN and MMF calculation. You can choose to overwrite a customized set of MMF output variables by the NN outputs or a mixture of NN and MMF output (e.g. dT/dt = a * dT/dt_nn + (1-a) * dT/dt_mmf) to couple back to the rest of E3SM. In this mode, you need to set `cb_partial_coupling_vars` which will decide which variables will use NN outputs or a mixture of NN/MMF outputs. Variables not included in the `cb_partial_coupling_vars` will use the MMF output. `cb_do_ramp`, `cb_ramp_option`, and `cb_ramp_factor` can specify the customized mixture ratio of NN outputs and MMF outputs. If `cb_do_ramp=False` then we will use the `a=1` i.e. use the NN outputs to replace MMF output. If `cb_do_ramp=True` you can set `a<1` or let it depend on time. We have a few options of time schedules by setting `cb_ramp_option` and `cb_ramp_factor` see the namelist section for more details.
 
@@ -121,3 +115,17 @@ We provided instructions to reproduce our pretrained MLP_v2 and Unet_v4 models, 
 ### Using customized input/output configurations
 
 If you want to use a customized NN model with a different input configuration (you will still need to predict the same output variables with a length of 368), you need to modify ```components/eam/src/physics/cam/mmf_nn_emulator.F90``` to handle the new input features. In the "select case (to_lower(trim(cb_nn_var_combo)))" block, you need to add a new case option for your customized input configuration. You can refer to the existing 'v2' and 'v4' cases to see how to handle the input features.
+
+
+## Author
+- Zeyuan Hu, Harvard University (Previous intern at Nvidia)
+
+## Contributors
+- Akshay Subramaniam, Nvidia
+- Sungduk Yu, Intel Corporation
+- Walter Hannah, Lawrence Livermore National Laboratory
+
+## References
+
+- [ClimSim-Online: A Large Multi-scale Dataset and Framework for Hybrid ML-physics Climate Emulation](https://arxiv.org/abs/2306.08754)
+- [Stable Machine-Learning Parameterization of Subgrid Processes with Real Geography and Full-physics Emulation](https://arxiv.org/abs/2407.00124)
