@@ -47,8 +47,8 @@ public :: &
    diag_physvar_ic,    &
    diag_readnl          ! read namelist options
 
-#ifdef CLIMSIM
-public :: diag_climsim_debug   ! output for climsim partial-coupling debugging (sungduk)
+#ifdef MMF_NN_EMULATOR
+public :: diag_mmf_nn_emulator_debug   ! output for mmf_nn_emulator partial-coupling debugging (sungduk)
 #endif
 
 logical, public :: inithist_all = .false. ! Flag to indicate set of fields to be 
@@ -324,7 +324,7 @@ subroutine diag_init()
    call addfld ('PSL',horiz_only,    'A','Pa','Sea level pressure', &
       standard_name='air_pressure_at_mean_sea_level')
 
-#if defined(MMF_ML_TRAINING) || defined(CLIMSIM)
+#if defined(MMF_ML_TRAINING) || defined(MMF_NN_EMULATOR)
    call addfld ('DTPHYS',(/ 'lev' /), 'A','K/s','dT/dt from physics')
    call addfld ('DQ1PHYS',(/ 'lev' /), 'A','kg/kg/s','dQ1/dt from physics')
    call addfld ('DQ2PHYS',(/ 'lev' /), 'A','kg/kg/s','dQ2/dt from physics')
@@ -1523,7 +1523,7 @@ end subroutine diag_conv_tend_ini
        end if
     end if
 
-#if defined(MMF_ML_TRAINING) || defined(CLIMSIM)
+#if defined(MMF_ML_TRAINING) || defined(MMF_NN_EMULATOR)
    ! output physics tendencies
     if (hist_fld_active('DTPHYS')) then
        call outfld('DTPHYS   ',state%t_phy(1,:,:), pcols, lchnk)
@@ -2864,8 +2864,8 @@ end subroutine diag_phys_tend_writeout
 
    end subroutine qsat_hPa
 
-#ifdef CLIMSIM
-subroutine diag_climsim_debug (state, cam_out, pbuf, k) ! sungduk
+#ifdef MMF_NN_EMULATOR
+subroutine diag_mmf_nn_emulator_debug (state, cam_out, pbuf, k) ! sungduk
  !
  !---------------------------------------------------------------
  !
@@ -2914,7 +2914,7 @@ subroutine diag_climsim_debug (state, cam_out, pbuf, k) ! sungduk
    call outfld ('cam_out_PRECSC_'//char(k+48), snow_dp,               pcols, lchnk)
    call outfld ('cam_out_PRECC_'//char(k+48),  prec_dp,               pcols, lchnk)
 
-end subroutine diag_climsim_debug
+end subroutine diag_mmf_nn_emulator_debug
 #endif
 
 end module cam_diagnostics

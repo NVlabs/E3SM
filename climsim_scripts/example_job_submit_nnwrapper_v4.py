@@ -10,20 +10,19 @@ import os, datetime, subprocess as sp, numpy as np
 import shutil, glob
 newcase,config,build,clean,submit,continue_run = False,False,False,False,False,False
 
-acct = 'm4331'
+acct = os.environ.get("MMF_NN_SLURM_ACCOUNT", "m4331")
 
-case_prefix = 'example_job_submit_nn_v4'
+case_prefix = 'example_job_submit_nnwrapper_v4'
 # exe_refcase = ''
 
-top_dir  = os.getenv('HOME')
-scratch_dir = os.getenv('SCRATCH')
-case_dir = scratch_dir+'/e3sm_mlt_scratch/'
-src_dir  = top_dir+'/nvidia_codes/E3SM_private/' 
+top_dir  = "/climsim"
+case_dir = '/scratch/'
+src_dir  = top_dir+'/E3SM/' 
 # user_cpp = '-DMMF_ML_TRAINING' # for saving ML variables
-user_cpp = '-DCLIMSIM' # do NN inference, turn on microphysics classifier
+user_cpp = '-DMMF_NN_EMULATOR' # NN hybrid test
 #user_cpp = '' # do MMF
 
-pytorch_fortran_path = '/storage/shared_e3sm/pytorch-fortran-gnu-cuda11.7/gnu-cuda11.7/install'
+pytorch_fortran_path = '/opt/pytorch-fortran'
 os.environ["pytorch_proxy_ROOT"] = pytorch_fortran_path
 os.environ["pytorch_fort_proxy_ROOT"] = pytorch_fortran_path
 
@@ -51,10 +50,11 @@ ne,npg=4,2;  num_nodes=1  ; grid=f'ne{ne}pg{npg}_ne{ne}pg{npg}'
 # ne,npg=30,2; num_nodes=32 ; grid=f'ne{ne}pg{npg}_ne{ne}pg{npg}'
 # ne,npg=30,2; num_nodes=32 ; grid=f'ne{ne}pg{npg}_oECv3' # bi-grid for AMIP or coupled
 
-compset,arch   = 'F2010-MMF1','GNUGPU'
+compset,arch   = 'F2010-MMF1','GNUCPU'
+# compset,arch   = 'F2010-MMF1','GNUGPU'
 # compset,arch   = 'FAQP-MMF1','GNUGPU'
 # compset,arch   = 'F2010-MMF1','CORI';
-# (MMF1: Note that MMF_VT is tunred off for CLIMSIM in $E3SMROOT/components/eam/cime_config/config_component.xml)  
+# (MMF1: Note that MMF_VT is tunred off for MMF_NN_EMULATOR in $E3SMROOT/components/eam/cime_config/config_component.xml)  
 
 queue = 'regular'
 #queue = 'debug'
@@ -66,48 +66,31 @@ if debug_mode: case_list.append('debug')
 
 case='.'.join(case_list)
 #---------------------------------------------------------------------------------------------------
-# CLIMSIM
-f_torch_model = '/storage/shared_e3sm/saved_models/v4/v4plus_unet_qstra22_cliprh_mae/model.pt'
-f_inp_sub     = '/storage/shared_e3sm/saved_models/v4/v4plus_unet_qstra22_cliprh_mae/inp_sub.txt'
-f_inp_div     = '/storage/shared_e3sm/saved_models/v4/v4plus_unet_qstra22_cliprh_mae/inp_div.txt'
-f_out_scale   = '/storage/shared_e3sm/saved_models/v4/v4plus_unet_qstra22_cliprh_mae/out_scale.txt'
-f_qinput_log = '.true.'
-f_qinput_prune = '.true.'
-f_qoutput_prune = '.true.'
-f_strato_lev = 15
-f_qc_lbd = '/storage/shared_e3sm/normalization/qc_exp_lambda_large.txt'
-f_qi_lbd = '/storage/shared_e3sm/normalization/qi_exp_lambda_large.txt'
-f_qn_lbd = '/storage/shared_e3sm/normalization/qn_exp_lambda_large.txt'
-f_decouple_cloud = '.false.'
+# MMF_NN_EMULATOR
+torch_model = '/storage/shared_e3sm/saved_models/wrapper/v4_unet_wrapper_noconstraint.pt'
+inputlength = 1525
+outputlength = 368
+cb_nn_var_combo = 'v4'
+input_rh = '.true.'
 cb_spinup_step = 5
-f_do_limiter = '.false.'
-
-f_cb_zeroqn_strat = '.true.'
-f_cb_partial_coupling = '.false.'
-
-f_cb_do_ramp = '.false.'
-f_cb_ramp_option = 'step'
+cb_strato_water_constraint = '.false.' # set .true. to use stratospheric water constraint to remove all stratospheric clouds and set dqv/dt in strato to 0
+cb_partial_coupling = '.false.'
+cb_do_ramp = '.false.'
+cb_ramp_option = 'step'
 cb_ramp_factor = 1.0
 cb_ramp_step_0steps = 80
 cb_ramp_step_1steps = 10
-cb_do_clip = '.true.'
-cb_do_aggressive_pruning = '.true.'
 
-cb_clip_rhonly = '.true.'
-strato_lev_qinput = 22
-strato_lev_tinput = -1
-
-# check if MMF_ML_TRAINING is in user_cpp, then either no -DCLIMSIM or f_cb_partial_coupling need to be true, otherwise raise error
+# check if MMF_ML_TRAINING is in user_cpp, then either no -DMMF_NN_EMULATOR or f_cb_partial_coupling need to be true, otherwise raise error
 if 'MMF_ML_TRAINING' in user_cpp:
-   if 'CLIMSIM' in user_cpp:
-      if f_cb_partial_coupling == '.false.':
-         raise ValueError('If CLIMSIM is used with MMF_ML_TRAINING, f_cb_partial_coupling must be true.')
+   if 'MMF_NN_EMULATOR' in user_cpp:
+      if cb_partial_coupling == '.false.':
+         raise ValueError('If MMF_NN_EMULATOR is used with MMF_ML_TRAINING, cb_partial_coupling must be true.')
 #---------------------------------------------------------------------------------------------------
 print('\n  case : '+case+'\n')
 
-if 'CPU' in arch : max_mpi_per_node,atm_nthrds  = 64,1 ; max_task_per_node = 64
-if 'GPU' in arch : max_mpi_per_node,atm_nthrds  =  4,8 ; max_task_per_node = 32
-if arch=='CORI'  : max_mpi_per_node,atm_nthrds  = 64,1
+if 'CPU' in arch : max_mpi_per_node,atm_nthrds  =  2,4 ; max_task_per_node = 8
+if 'GPU' in arch : max_mpi_per_node,atm_nthrds  =  2,8 ; max_task_per_node = 16
 atm_ntasks = max_mpi_per_node*num_nodes
 #---------------------------------------------------------------------------------------------------
 if newcase :
@@ -115,9 +98,8 @@ if newcase :
    case_scripts_dir=f'{case_dir}/{case}' 
    if os.path.isdir(f'{case_dir}/{case}'): exit('\n'+clr.RED+f'This case already exists: \n{case_dir}/{case}'+clr.END+'\n')
    cmd = f'{src_dir}/cime/scripts/create_newcase -case {case} --script-root {case_scripts_dir} -compset {compset} -res {grid}  '
-   if arch=='GNUCPU' : cmd += f' -mach pm-cpu -compiler gnu    -pecount {atm_ntasks}x{atm_nthrds} '
-   if arch=='GNUGPU' : cmd += f' -mach pm-gpu -compiler gnugpu -pecount {atm_ntasks}x{atm_nthrds} '
-   if arch=='CORI'   : cmd += f' -mach cori-knl -pecount {atm_ntasks}x{atm_nthrds} '
+   if arch=='GNUCPU' : cmd += f' -mach docker-climsim -compiler gnu    -pecount {atm_ntasks}x{atm_nthrds} '
+   if arch=='GNUGPU' : cmd += f' -mach docker-climsim -compiler gnugpu -pecount {atm_ntasks}x{atm_nthrds} '
    run_cmd(cmd)
 os.chdir(f'{case_scripts_dir}')
 if newcase :
@@ -162,38 +144,21 @@ state_debug_checks = .true.
 do_aerosol_rad = .false.
 /
 
-&climsim_nl
-inputlength     = 1525
-outputlength    = 368
-cb_nn_var_combo = 'v4'
-input_rh        = .true.
-cb_torch_model  = '{f_torch_model}'
-cb_inp_sub      = '{f_inp_sub}'
-cb_inp_div      = '{f_inp_div}'
-cb_out_scale    = '{f_out_scale}'
-qinput_log   = {f_qinput_log}
-qinput_prune = {f_qinput_prune}
-qoutput_prune = {f_qoutput_prune}
-strato_lev = {f_strato_lev}
-cb_qc_lbd = '{f_qc_lbd}'
-cb_qi_lbd = '{f_qi_lbd}'
-cb_qn_lbd = '{f_qn_lbd}'
-cb_decouple_cloud = {f_decouple_cloud}
+&mmf_nn_emulator_nl
+inputlength     = {inputlength}
+outputlength    = {outputlength}
+cb_nn_var_combo = '{cb_nn_var_combo}'
+input_rh        = {input_rh}
+cb_torch_model  = '{torch_model}'
 cb_spinup_step = {cb_spinup_step}
-cb_do_limiter = {f_do_limiter}
-cb_partial_coupling = {f_cb_partial_coupling}
+cb_partial_coupling = {cb_partial_coupling}
 cb_partial_coupling_vars = 'ptend_t', 'ptend_q0001','ptend_q0002','ptend_q0003', 'ptend_u', 'ptend_v', 'cam_out_PRECC', 'cam_out_PRECSC', 'cam_out_NETSW', 'cam_out_FLWDS', 'cam_out_SOLS', 'cam_out_SOLL', 'cam_out_SOLSD', 'cam_out_SOLLD' 
-cb_do_ramp = {f_cb_do_ramp}
-cb_ramp_option = '{f_cb_ramp_option}'
+cb_do_ramp = {cb_do_ramp}
+cb_ramp_option = '{cb_ramp_option}'
 cb_ramp_factor = {cb_ramp_factor}
 cb_ramp_step_0steps = {cb_ramp_step_0steps}
 cb_ramp_step_1steps = {cb_ramp_step_1steps}
-cb_do_clip = {cb_do_clip}
-cb_do_aggressive_pruning = {cb_do_aggressive_pruning}
-cb_clip_rhonly = {cb_clip_rhonly}
-strato_lev_qinput = {strato_lev_qinput}
-strato_lev_tinput = {strato_lev_tinput}
-cb_zeroqn_strat = {f_cb_zeroqn_strat}
+cb_strato_water_constraint = {cb_strato_water_constraint}
 /
 
 &cam_history_nl
@@ -219,7 +184,6 @@ if config :
    cpp_defs += ' '+user_cpp+' '
    if cpp_defs != '':
       run_cmd(f'./xmlchange --append --id CAM_CONFIG_OPTS --val \" -cppdefs \' {cpp_defs} \'  \"')
-   # for ClimSim's modified namelist_definition.xml
    if src_mod_atm :
       run_cmd(f'./xmlchange --append --id CAM_CONFIG_OPTS --val \" -usr_src {dir_src_mod} \"')
    run_cmd('./xmlchange PIO_NETCDF_FORMAT=\"64bit_data\" ')
@@ -231,7 +195,7 @@ if build :
    if clean : run_cmd('./case.build --clean')
    run_cmd('./case.build')
 
-# run_cmd(f'cp /{case_dir}{exe_refcase}/build/e3sm.exe ./build/')
+# run_cmd(f'cp {case_dir}{exe_refcase}/build/e3sm.exe ./build/')
 # run_cmd('./xmlchange BUILD_COMPLETE=TRUE')
 #---------------------------------------------------------------------------------------------------
 if submit : 

@@ -54,8 +54,8 @@ module physpkg
   public phys_run1      ! First phase of the public run method
   public phys_run2      ! Second phase of the public run method
   public phys_final     ! Public finalization method
-#ifdef CLIMSIM
-  public climsim_driver ! CLIMSIM NN-emulation driver
+#ifdef MMF_NN_EMULATOR
+  public mmf_nn_emulator_driver ! MMF_NN_EMULATOR NN-emulation driver
 #endif
   !-----------------------------------------------------------------------------
   ! Private module data
@@ -511,8 +511,8 @@ subroutine phys_init( phys_state, phys_tend, pbuf2d, cam_out )
   !-----------------------------------------------------------------------------
   ! Purpose: Initialization of physics package
   !-----------------------------------------------------------------------------
-#ifdef CLIMSIM
-  use climsim,            only: init_neural_net
+#ifdef MMF_NN_EMULATOR
+  use mmf_nn_emulator,            only: init_neural_net
 #endif
   use physics_buffer,     only: physics_buffer_desc, pbuf_initialize, pbuf_get_index
   use physconst,          only: rair, cpair, gravit, stebol, tmelt, &
@@ -703,7 +703,7 @@ subroutine phys_init( phys_state, phys_tend, pbuf2d, cam_out )
   !disable additional diagn for crm
   call check_energy_set_print_additional_diagn(.false.)
 
-#ifdef CLIMSIM
+#ifdef MMF_NN_EMULATOR
   call init_neural_net()
 #endif
 
@@ -712,20 +712,20 @@ end subroutine phys_init
 !===================================================================================================
 !===================================================================================================
 
-#ifdef CLIMSIM
-subroutine climsim_driver(phys_state, phys_state_aphys1, phys_state_sp, ztodt, phys_tend, pbuf2d,  cam_in, cam_out, cam_out_sp)
+#ifdef MMF_NN_EMULATOR
+subroutine mmf_nn_emulator_driver(phys_state, phys_state_aphys1, phys_state_mmf, ztodt, phys_tend, pbuf2d,  cam_in, cam_out, cam_out_mmf)
   !-----------------------------------------------------------------------------
-  ! Purpose: climsim driver
+  ! Purpose: mmf_nn_emulator driver
   !-----------------------------------------------------------------------------
-  use climsim,          only: cb_partial_coupling, cb_partial_coupling_vars, cb_spinup_step, cb_do_ramp, cb_ramp_linear_steps, &
-                              cb_ramp_option, cb_ramp_factor, cb_ramp_step_0steps, cb_ramp_step_1steps, cb_solin_nolag
+  use mmf_nn_emulator,          only: cb_partial_coupling, cb_partial_coupling_vars, cb_spinup_step, cb_do_ramp, cb_ramp_linear_steps, &
+                              cb_ramp_option, cb_ramp_factor, cb_ramp_step_0steps, cb_ramp_step_1steps
   use physics_buffer,   only: physics_buffer_desc, pbuf_get_chunk, &
                               pbuf_allocate, pbuf_get_index, pbuf_get_field
   use time_manager,     only: get_nstep, get_step_size, & 
                               is_first_step,  is_first_restart_step, &
                               get_curr_calday
   use cam_diagnostics,  only: diag_allocate, &
-                              diag_climsim_debug
+                              diag_mmf_nn_emulator_debug
   use radiation,        only: iradsw, use_rad_dt_cosz 
   use radconstants,     only: nswbands, get_ref_solar_band_irrad
   use rad_solar_var,    only: get_variability
@@ -749,12 +749,12 @@ subroutine climsim_driver(phys_state, phys_state_aphys1, phys_state_sp, ztodt, p
   real(r8), intent(in) :: ztodt            ! physics time step unless nstep=0
   type(physics_state), intent(inout), dimension(begchunk:endchunk) :: phys_state
   type(physics_state), intent(in),    dimension(begchunk:endchunk) :: phys_state_aphys1
-  type(physics_state), intent(inout),    dimension(begchunk:endchunk) :: phys_state_sp
+  type(physics_state), intent(inout),    dimension(begchunk:endchunk) :: phys_state_mmf
   type(physics_tend ), intent(inout), dimension(begchunk:endchunk) :: phys_tend
   type(physics_buffer_desc), pointer, dimension(:,:)               :: pbuf2d
   type(cam_in_t),                     dimension(begchunk:endchunk) :: cam_in
   type(cam_out_t),                    dimension(begchunk:endchunk) :: cam_out
-  type(cam_out_t),      intent(out),      dimension(begchunk:endchunk) :: cam_out_sp
+  type(cam_out_t),      intent(out),      dimension(begchunk:endchunk) :: cam_out_mmf
 
   !-----------------------------------------------------------------------------
   ! Local Variables
@@ -774,20 +774,20 @@ subroutine climsim_driver(phys_state, phys_state_aphys1, phys_state_sp, ztodt, p
   !-----------------------------------------------------------------------------
 
   !-----------------------------------------------------------------------------
-  ! Local Variables (for CLIMSIM)
+  ! Local Variables (for MMF_NN_EMULATOR)
   !-----------------------------------------------------------------------------
   integer :: c, i, j, k 
   integer, save :: nstep0
   integer       :: nstep_NN, dtime
-  logical :: do_climsim_inference = .false.
+  logical :: do_mmf_nn_emulator_inference = .false.
 
   ! - for partial coupling - !
 ! type(physics_state), dimension(begchunk:endchunk)  :: phys_state_nn
-  ! type(physics_state), dimension(begchunk:endchunk)  :: phys_state_sp_backup
+  ! type(physics_state), dimension(begchunk:endchunk)  :: phys_state_mmf_backup
   ! type(physics_tend ), dimension(begchunk:endchunk)  :: phys_tend_nn
 
   type(physics_state), allocatable, dimension(:)  :: phys_state_nn
-  type(physics_state), allocatable, dimension(:)  :: phys_state_sp_backup
+  type(physics_state), allocatable, dimension(:)  :: phys_state_mmf_backup
   type(physics_tend ), allocatable, dimension(:)  :: phys_tend_nn
   type(cam_out_t),     dimension(begchunk:endchunk)  :: cam_out_nn
   integer :: ixcldice, ixcldliq
@@ -825,10 +825,10 @@ subroutine climsim_driver(phys_state, phys_state_aphys1, phys_state_sp, ztodt, p
       write(iulog,*) 'Error allocating phys_state_nn error = ',ierr
    end if
 
-   allocate(phys_state_sp_backup(begchunk:endchunk), stat=ierr)
+   allocate(phys_state_mmf_backup(begchunk:endchunk), stat=ierr)
    if (ierr /= 0) then
       ! Handle allocation error
-      write(iulog,*) 'Error allocating phys_state_sp_backup error = ',ierr
+      write(iulog,*) 'Error allocating phys_state_mmf_backup error = ',ierr
    end if
 
    allocate(phys_tend_nn(begchunk:endchunk), stat=ierr)
@@ -839,7 +839,7 @@ subroutine climsim_driver(phys_state, phys_state_aphys1, phys_state_sp, ztodt, p
 
     do lchnk=begchunk,endchunk
       call physics_state_alloc(phys_state_nn(lchnk),lchnk,pcols)
-      call physics_state_alloc(phys_state_sp_backup(lchnk),lchnk,pcols)
+      call physics_state_alloc(phys_state_mmf_backup(lchnk),lchnk,pcols)
       ! call physics_tend_alloc(phys_tend_nn(lchnk),lchnk,pcols)
    end do
 
@@ -863,11 +863,7 @@ subroutine climsim_driver(phys_state, phys_state_aphys1, phys_state_sp, ztodt, p
   call get_variability(sfac)                        ! "
   do lchnk=begchunk,endchunk
      ncol = phys_state(lchnk)%ncol
-     if (cb_solin_nolag) then
-      calday = get_curr_calday()
-     else
-      calday = get_curr_calday(-dtime) ! get current calendar day with a negative offset to match the time in mli
-     end if
+     calday = get_curr_calday(-dtime) ! get current calendar day with a negative offset to match the time in mli and CRM physics
      ! coszrs
      call get_rlat_all_p(lchnk, ncol, clat)
      call get_rlon_all_p(lchnk, ncol, clon)
@@ -904,38 +900,38 @@ subroutine climsim_driver(phys_state, phys_state_aphys1, phys_state_sp, ztodt, p
   nstep_NN = cb_spinup_step
 
   if (nstep-nstep0 .eq. nstep_NN) then
-     do_climsim_inference = .true.
+     do_mmf_nn_emulator_inference = .true.
      if (masterproc) then
         write(iulog,*) '---------------------------------------'
-        write(iulog,*) '[CLIMSIM] NN coupling starts'
+        write(iulog,*) '[MMF_NN_EMULATOR] NN coupling starts'
         write(iulog,*) '---------------------------------------'
      end if
   end if
 
-#ifdef CLIMSIMDEBUG
+#ifdef MMF_NN_EMULATORDEBUG
   if (masterproc) then
-     write (iulog,*) '[CLIMSIMDEBUG] nstep - nstep0, nstep_NN, do_climsim = ', nstep - nstep0, nstep_NN, do_climsim_inference
+     write (iulog,*) '[MMF_NN_EMULATORDEBUG] nstep - nstep0, nstep_NN, do_mmf_nn_emulator = ', nstep - nstep0, nstep_NN, do_mmf_nn_emulator_inference
   endif
 #endif
 
   !Save original values of subroutine arguments
-  if (do_climsim_inference .and. cb_partial_coupling) then
+  if (do_mmf_nn_emulator_inference .and. cb_partial_coupling) then
      do lchnk = begchunk, endchunk
-      ! since phys_state_sp_backup etc is just allocated but have not been initialized (empty), doing this copy won't lead to memory leak
+      ! since phys_state_mmf_backup etc is just allocated but have not been initialized (empty), doing this copy won't lead to memory leak
         phys_state_nn(lchnk) = phys_state(lchnk) 
-        phys_state_sp_backup(lchnk) = phys_state_sp(lchnk)
+        phys_state_mmf_backup(lchnk) = phys_state_mmf(lchnk)
         phys_tend_nn(lchnk)  = phys_tend(lchnk) 
         cam_out_nn(lchnk)    = cam_out(lchnk) 
      end do
   end if
 
   ! Run phys_run1 physics
-  if (.not. do_climsim_inference) then  ! MMFspin-up
+  if (.not. do_mmf_nn_emulator_inference) then  ! MMFspin-up
      call phys_run1(phys_state, ztodt, phys_tend, pbuf2d,  cam_in, cam_out)
      do lchnk = begchunk, endchunk
-        call physics_state_dealloc(phys_state_sp(lchnk)) ! to prevent memory leak
-        call physics_state_copy(phys_state(lchnk), phys_state_sp(lchnk))
-        cam_out_sp(lchnk)    = cam_out(lchnk)
+        call physics_state_dealloc(phys_state_mmf(lchnk)) ! to prevent memory leak
+        call physics_state_copy(phys_state(lchnk), phys_state_mmf(lchnk))
+        cam_out_mmf(lchnk)    = cam_out(lchnk)
      end do
 
   else  ! NN inference
@@ -952,16 +948,16 @@ subroutine climsim_driver(phys_state, phys_state_aphys1, phys_state_sp, ztodt, p
         end do
 
         do lchnk = begchunk, endchunk
-          ! update phys_state_sp but cannot overwrite its the mmf adv and phy history
-          call physics_state_dealloc(phys_state_sp(lchnk))
-          call physics_state_copy(phys_state(lchnk), phys_state_sp(lchnk))
-          phys_state_sp(lchnk)%t_adv(:,:,:) = phys_state_sp_backup(lchnk)%t_adv(:,:,:)
-          phys_state_sp(lchnk)%u_adv(:,:,:) = phys_state_sp_backup(lchnk)%u_adv(:,:,:)
-          phys_state_sp(lchnk)%t_phy(:,:,:) = phys_state_sp_backup(lchnk)%t_phy(:,:,:)
-          phys_state_sp(lchnk)%u_phy(:,:,:) = phys_state_sp_backup(lchnk)%u_phy(:,:,:)
-          phys_state_sp(lchnk)%q_adv(:,:,:,:) = phys_state_sp_backup(lchnk)%q_adv(:,:,:,:)
-          phys_state_sp(lchnk)%q_phy(:,:,:,:) = phys_state_sp_backup(lchnk)%q_phy(:,:,:,:)
-          cam_out_sp(lchnk) = cam_out(lchnk)
+          ! update phys_state_mmf but cannot overwrite its the mmf adv and phy history
+          call physics_state_dealloc(phys_state_mmf(lchnk))
+          call physics_state_copy(phys_state(lchnk), phys_state_mmf(lchnk))
+          phys_state_mmf(lchnk)%t_adv(:,:,:) = phys_state_mmf_backup(lchnk)%t_adv(:,:,:)
+          phys_state_mmf(lchnk)%u_adv(:,:,:) = phys_state_mmf_backup(lchnk)%u_adv(:,:,:)
+          phys_state_mmf(lchnk)%t_phy(:,:,:) = phys_state_mmf_backup(lchnk)%t_phy(:,:,:)
+          phys_state_mmf(lchnk)%u_phy(:,:,:) = phys_state_mmf_backup(lchnk)%u_phy(:,:,:)
+          phys_state_mmf(lchnk)%q_adv(:,:,:,:) = phys_state_mmf_backup(lchnk)%q_adv(:,:,:,:)
+          phys_state_mmf(lchnk)%q_phy(:,:,:,:) = phys_state_mmf_backup(lchnk)%q_phy(:,:,:,:)
+          cam_out_mmf(lchnk) = cam_out(lchnk)
         end do
 
         call phys_run1_NN(phys_state_nn, phys_state_aphys1, ztodt, phys_tend_nn, pbuf2d, cam_in, cam_out_nn,&
@@ -981,23 +977,23 @@ subroutine climsim_driver(phys_state, phys_state_aphys1, phys_state_sp, ztodt, p
         call phys_run1_NN(phys_state, phys_state_aphys1, ztodt, phys_tend, pbuf2d,  cam_in, cam_out,&
                           solin, coszrs)
         do lchnk = begchunk, endchunk
-          ! in fully nn coupling case (no partial coupling), phys_state_sp is just synced with phys_state but won't be used
-          call physics_state_dealloc(phys_state_sp(lchnk))
-          call physics_state_copy(phys_state(lchnk), phys_state_sp(lchnk))
-          cam_out_sp(lchnk)    = cam_out(lchnk)
+          ! in fully nn coupling case (no partial coupling), phys_state_mmf is just synced with phys_state but won't be used
+          call physics_state_dealloc(phys_state_mmf(lchnk))
+          call physics_state_copy(phys_state(lchnk), phys_state_mmf(lchnk))
+          cam_out_mmf(lchnk)    = cam_out(lchnk)
         end do
      end if ! (cb_partial_coupling)
-  end if ! (.not. do_climsim_inference)
+  end if ! (.not. do_mmf_nn_emulator_inference)
 
   ! Partial coupling
   ! NN calculations overide MMF calculations for any variables included in 'cb_partial_coupling_vars'
   ! e.g., [ 'ptend_t','ptend_q0001','ptend_q0002','ptend_q0003', 'ptend_u', 'ptend_v',
   !         'cam_out_NETSW', 'cam_out_FLWDS', 'cam_out_PRECSC', 'cam_out_PRECC',
   !         'cam_out_SOLS', 'cam_out_SOLL', 'cam_out_SOLSD', 'cam_out_SOLLD'           ]
-  if (do_climsim_inference .and. cb_partial_coupling) then
+  if (do_mmf_nn_emulator_inference .and. cb_partial_coupling) then
   
     if (cb_do_ramp) then
-      write (iulog,*) 'CLIMSIM partial coupling: cb_ramp_option = ', trim(cb_ramp_option)
+      write (iulog,*) 'MMF_NN_EMULATOR partial coupling: cb_ramp_option = ', trim(cb_ramp_option)
   
       select case (to_lower(trim(cb_ramp_option)))
         case('constant')
@@ -1022,12 +1018,12 @@ subroutine climsim_driver(phys_state, phys_state_aphys1, phys_state_sp, ztodt, p
     end if
     
     if (cb_do_ramp) then
-      write (iulog,*) 'CLIMSIM partial coupling: cb_do_ramp is on'
-      write (iulog,*) 'CLIMSIM partial coupling: 1 is fully NN, ramp_ratio = ', ramp_ratio
-      write (iulog,*) 'CLIMSIM partial coupling: cb_ramp_option = ', trim(cb_ramp_option)
+      write (iulog,*) 'MMF_NN_EMULATOR partial coupling: cb_do_ramp is on'
+      write (iulog,*) 'MMF_NN_EMULATOR partial coupling: 1 is fully NN, ramp_ratio = ', ramp_ratio
+      write (iulog,*) 'MMF_NN_EMULATOR partial coupling: cb_ramp_option = ', trim(cb_ramp_option)
     else
-      write (iulog,*) 'CLIMSIM partial coupling: cb_do_ramp is off'
-      write (iulog,*) 'CLIMSIM partial coupling: 1 is fully NN, ramp_ratio = ', ramp_ratio
+      write (iulog,*) 'MMF_NN_EMULATOR partial coupling: cb_do_ramp is off'
+      write (iulog,*) 'MMF_NN_EMULATOR partial coupling: 1 is fully NN, ramp_ratio = ', ramp_ratio
     end if
 
      call cnst_get_ind('CLDICE', ixcldice)
@@ -1040,82 +1036,82 @@ subroutine climsim_driver(phys_state, phys_state_aphys1, phys_state_sp, ztodt, p
               phys_tend(c)%dtdt(:,:) = phys_tend_nn(c)%dtdt(:,:)*ramp_ratio + phys_tend(c)%dtdt(:,:)*(1.0_r8-ramp_ratio)
               do_geopotential = .true.
               if (nstep-nstep0 .eq. nstep_NN .and. masterproc) then
-                 write (iulog,*) 'CLIMSIM partial coupling: ', trim(cb_partial_coupling_vars(k))
+                 write (iulog,*) 'MMF_NN_EMULATOR partial coupling: ', trim(cb_partial_coupling_vars(k))
               endif
            else if (trim(cb_partial_coupling_vars(k)) == 'ptend_q0001') then
               phys_state(c)%q(:,:,1) = phys_state_nn(c)%q(:,:,1)*ramp_ratio + phys_state(c)%q(:,:,1)*(1.0_r8-ramp_ratio) 
               do_geopotential = .true.
               if (nstep-nstep0 .eq. nstep_NN .and. masterproc) then
-                 write (iulog,*) 'CLIMSIM partial coupling: ', trim(cb_partial_coupling_vars(k))
+                 write (iulog,*) 'MMF_NN_EMULATOR partial coupling: ', trim(cb_partial_coupling_vars(k))
               endif
            else if (trim(cb_partial_coupling_vars(k)) == 'ptend_q0002') then
               phys_state(c)%q(:,:,ixcldliq) = phys_state_nn(c)%q(:,:,ixcldliq)*ramp_ratio + phys_state(c)%q(:,:,ixcldliq)*(1.0_r8-ramp_ratio)
               if (nstep-nstep0 .eq. nstep_NN .and. masterproc) then
-                 write (iulog,*) 'CLIMSIM partial coupling: ', trim(cb_partial_coupling_vars(k))
+                 write (iulog,*) 'MMF_NN_EMULATOR partial coupling: ', trim(cb_partial_coupling_vars(k))
               endif
            else if (trim(cb_partial_coupling_vars(k)) == 'ptend_q0003') then
               phys_state(c)%q(:,:,ixcldice) = phys_state_nn(c)%q(:,:,ixcldice)*ramp_ratio + phys_state(c)%q(:,:,ixcldice)*(1.0_r8-ramp_ratio)
               if (nstep-nstep0 .eq. nstep_NN .and. masterproc) then
-                 write (iulog,*) 'CLIMSIM partial coupling: ', trim(cb_partial_coupling_vars(k))
+                 write (iulog,*) 'MMF_NN_EMULATOR partial coupling: ', trim(cb_partial_coupling_vars(k))
               endif
            else if (trim(cb_partial_coupling_vars(k)) == 'ptend_u') then
               phys_state(c)%u(:,:)   = phys_state_nn(c)%u(:,:)*ramp_ratio + phys_state(c)%u(:,:)*(1.0_r8-ramp_ratio)
               phys_tend(c)%dudt(:,:) = phys_tend_nn(c)%dudt(:,:)*ramp_ratio + phys_tend(c)%dudt(:,:)*(1.0_r8-ramp_ratio)
               if (nstep-nstep0 .eq. nstep_NN .and. masterproc) then
-                 write (iulog,*) 'CLIMSIM partial coupling: ', trim(cb_partial_coupling_vars(k))
+                 write (iulog,*) 'MMF_NN_EMULATOR partial coupling: ', trim(cb_partial_coupling_vars(k))
               endif
            else if (trim(cb_partial_coupling_vars(k)) == 'ptend_v') then
               phys_state(c)%v(:,:)   = phys_state_nn(c)%v(:,:)*ramp_ratio + phys_state(c)%v(:,:)*(1.0_r8-ramp_ratio)
               phys_tend(c)%dvdt(:,:) = phys_tend_nn(c)%dvdt(:,:)*ramp_ratio + phys_tend(c)%dvdt(:,:)*(1.0_r8-ramp_ratio)
               if (nstep-nstep0 .eq. nstep_NN .and. masterproc) then
-                 write (iulog,*) 'CLIMSIM partial coupling: ', trim(cb_partial_coupling_vars(k))
+                 write (iulog,*) 'MMF_NN_EMULATOR partial coupling: ', trim(cb_partial_coupling_vars(k))
               endif
            else if (trim(cb_partial_coupling_vars(k)) == 'cam_out_NETSW') then
               cam_out(c)%netsw(:) = cam_out_nn(c)%netsw(:)*ramp_ratio + cam_out(c)%netsw(:)*(1.0_r8-ramp_ratio)
               if (nstep-nstep0 .eq. nstep_NN .and. masterproc) then
-                 write (iulog,*) 'CLIMSIM partial coupling: ', trim(cb_partial_coupling_vars(k))
+                 write (iulog,*) 'MMF_NN_EMULATOR partial coupling: ', trim(cb_partial_coupling_vars(k))
               endif
            else if (trim(cb_partial_coupling_vars(k)) == 'cam_out_FLWDS') then
               cam_out(c)%flwds(:) = cam_out_nn(c)%flwds(:)*ramp_ratio + cam_out(c)%flwds(:)*(1.0_r8-ramp_ratio)
               if (nstep-nstep0 .eq. nstep_NN .and. masterproc) then
-                 write (iulog,*) 'CLIMSIM partial coupling: ', trim(cb_partial_coupling_vars(k))
+                 write (iulog,*) 'MMF_NN_EMULATOR partial coupling: ', trim(cb_partial_coupling_vars(k))
               endif
            else if (trim(cb_partial_coupling_vars(k)) == 'cam_out_SOLS') then
               cam_out(c)%sols(:) = cam_out_nn(c)%sols(:)*ramp_ratio + cam_out(c)%sols(:)*(1.0_r8-ramp_ratio)
               if (nstep-nstep0 .eq. nstep_NN .and. masterproc) then
-                 write (iulog,*) 'CLIMSIM partial coupling: ', trim(cb_partial_coupling_vars(k))
+                 write (iulog,*) 'MMF_NN_EMULATOR partial coupling: ', trim(cb_partial_coupling_vars(k))
               endif
            else if (trim(cb_partial_coupling_vars(k)) == 'cam_out_SOLL') then
               cam_out(c)%soll(:) = cam_out_nn(c)%soll(:)*ramp_ratio + cam_out(c)%soll(:)*(1.0_r8-ramp_ratio)
               if (nstep-nstep0 .eq. nstep_NN .and. masterproc) then
-                 write (iulog,*) 'CLIMSIM partial coupling: ', trim(cb_partial_coupling_vars(k))
+                 write (iulog,*) 'MMF_NN_EMULATOR partial coupling: ', trim(cb_partial_coupling_vars(k))
               endif
            else if (trim(cb_partial_coupling_vars(k)) == 'cam_out_SOLSD') then
               cam_out(c)%solsd(:) = cam_out_nn(c)%solsd(:)*ramp_ratio + cam_out(c)%solsd(:)*(1.0_r8-ramp_ratio)
               if (nstep-nstep0 .eq. nstep_NN .and. masterproc) then
-                 write (iulog,*) 'CLIMSIM partial coupling: ', trim(cb_partial_coupling_vars(k))
+                 write (iulog,*) 'MMF_NN_EMULATOR partial coupling: ', trim(cb_partial_coupling_vars(k))
               endif
            else if (trim(cb_partial_coupling_vars(k)) == 'cam_out_SOLLD') then
               cam_out(c)%solld(:) = cam_out_nn(c)%solld(:)*ramp_ratio + cam_out(c)%solld(:)*(1.0_r8-ramp_ratio)
               if (nstep-nstep0 .eq. nstep_NN .and. masterproc) then
-                 write (iulog,*) 'CLIMSIM partial coupling: ', trim(cb_partial_coupling_vars(k))
+                 write (iulog,*) 'MMF_NN_EMULATOR partial coupling: ', trim(cb_partial_coupling_vars(k))
               endif
            else if (trim(cb_partial_coupling_vars(k)) == 'cam_out_PRECSC') then
               phys_buffer_chunk => pbuf_get_chunk(pbuf2d, c)
               call pbuf_get_field(phys_buffer_chunk, snow_dp_idx, snow_dp)
               snow_dp(:) = snow_dp_nn(:,c)*ramp_ratio + snow_dp(:)*(1.0_r8-ramp_ratio) 
               if (nstep-nstep0 .eq. nstep_NN .and. masterproc) then
-                 write (iulog,*) 'CLIMSIM partial coupling: ', trim(cb_partial_coupling_vars(k))
+                 write (iulog,*) 'MMF_NN_EMULATOR partial coupling: ', trim(cb_partial_coupling_vars(k))
               endif
            else if (trim(cb_partial_coupling_vars(k)) == 'cam_out_PRECC') then
               phys_buffer_chunk => pbuf_get_chunk(pbuf2d, c)
               call pbuf_get_field(phys_buffer_chunk, prec_dp_idx, prec_dp)
               prec_dp(:) = prec_dp_nn(:,c)*ramp_ratio + prec_dp(:)*(1.0_r8-ramp_ratio) 
               if (nstep-nstep0 .eq. nstep_NN .and. masterproc) then
-                 write (iulog,*) 'CLIMSIM partial coupling: ', trim(cb_partial_coupling_vars(k))
+                 write (iulog,*) 'MMF_NN_EMULATOR partial coupling: ', trim(cb_partial_coupling_vars(k))
               endif
            else
-              call endrun('[CLIMSIM: cb_partial_coupling] Wrong variables are included in cb_partial_coupling_vars: ' // trim(cb_partial_coupling_vars(k)))
+              call endrun('[MMF_NN_EMULATOR: cb_partial_coupling] Wrong variables are included in cb_partial_coupling_vars: ' // trim(cb_partial_coupling_vars(k)))
            end if
            k = k+1
         end do ! k
@@ -1171,14 +1167,14 @@ subroutine climsim_driver(phys_state, phys_state_aphys1, phys_state_sp, ztodt, p
 
   do lchnk=begchunk,endchunk
     call physics_state_dealloc(phys_state_nn(lchnk))
-    call physics_state_dealloc(phys_state_sp_backup(lchnk))
+    call physics_state_dealloc(phys_state_mmf_backup(lchnk))
     call physics_tend_dealloc(phys_tend_nn(lchnk))
   end do
   deallocate(phys_state_nn)
-  deallocate(phys_state_sp_backup)
+  deallocate(phys_state_mmf_backup)
   deallocate(phys_tend_nn)
 
-end subroutine climsim_driver
+end subroutine mmf_nn_emulator_driver
 
 
 subroutine phys_run1_NN(phys_state, phys_state_aphys1, ztodt, phys_tend, pbuf2d,  cam_in, cam_out, &
@@ -1186,7 +1182,7 @@ subroutine phys_run1_NN(phys_state, phys_state_aphys1, ztodt, phys_tend, pbuf2d,
   !-----------------------------------------------------------------------------
   ! Purpose: First part of atmos physics before updating of surface components
   !-----------------------------------------------------------------------------
-  use climsim,         only: neural_net, &
+  use mmf_nn_emulator,         only: neural_net, &
                              cb_partial_coupling, cb_partial_coupling_vars
   use physics_buffer,  only: physics_buffer_desc, pbuf_get_chunk, pbuf_get_field
   use time_manager,    only: get_nstep
@@ -1294,7 +1290,7 @@ subroutine phys_run1_NN(phys_state, phys_state_aphys1, ztodt, phys_tend, pbuf2d,
 #endif
 
 end subroutine phys_run1_NN
-#endif /* CLIMSIM */
+#endif /* MMF_NN_EMULATOR */
 
 
 subroutine phys_run1(phys_state, ztodt, phys_tend, pbuf2d,  cam_in, cam_out)
@@ -1373,7 +1369,7 @@ subroutine phys_run1(phys_state, ztodt, phys_tend, pbuf2d,  cam_in, cam_out)
   call check_energy_gmean(phys_state, pbuf2d, ztodt, nstep)
   call t_stopf ('chk_en_gmean')
 
-#ifndef CLIMSIM
+#ifndef MMF_NN_EMULATOR
 
   call pbuf_allocate(pbuf2d, 'physpkg')
   call diag_allocate()
@@ -2450,8 +2446,8 @@ subroutine tphysbc2(ztodt, fsns, fsnt, flns, flnt, &
     end if
   end if ! l_tracer_aero
 
-#ifndef CLIMSIM
-! in climsim_driver, this block is included, so need to skip when CLIMSIM is defined
+#ifndef MMF_NN_EMULATOR
+! in mmf_nn_emulator_driver, this block is included, so need to skip when MMF_NN_EMULATOR is defined
 ! even not executing this block, it won't influence the radiation_tend, which won't use cam_out%psl
   !-----------------------------------------------------------------------------
   ! Moist physical parameteriztions complete: 
@@ -2495,8 +2491,8 @@ subroutine tphysbc2(ztodt, fsns, fsnt, flns, flnt, &
 
   if(do_aerocom_ind3) call cloud_top_aerocom(state, pbuf) 
 
-#ifndef CLIMSIM
-! in climsim_driver, this block is included, so need to skip when CLIMSIM is defined
+#ifndef MMF_NN_EMULATOR
+! in mmf_nn_emulator_driver, this block is included, so need to skip when MMF_NN_EMULATOR is defined
   ! Diagnose the location of the tropopause
   call tropopause_output(state)
 
