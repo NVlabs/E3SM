@@ -10,7 +10,7 @@ import os, datetime, subprocess as sp, numpy as np
 import shutil, glob
 newcase,config,build,clean,submit,continue_run = False,False,False,False,False,False
 
-acct = 'm4331'
+acct = os.environ.get("MMF_NN_SLURM_ACCOUNT", "m4331")
 
 case_prefix = 'example_job_submit_mmf'
 # exe_refcase = ''
@@ -81,7 +81,7 @@ cb_ramp_factor = 1.0
 cb_ramp_step_0steps = 80
 cb_ramp_step_1steps = 10
 
-# check if MMF_ML_TRAINING is in user_cpp, then either no -DCLIMSIM or f_cb_partial_coupling need to be true, otherwise raise error
+# check if MMF_ML_TRAINING is in user_cpp, then either no -DMMF_NN_EMULATOR or f_cb_partial_coupling need to be true, otherwise raise error
 if 'MMF_ML_TRAINING' in user_cpp:
    if 'MMF_NN_EMULATOR' in user_cpp:
       if cb_partial_coupling == '.false.':
@@ -185,7 +185,6 @@ if config :
    cpp_defs += ' '+user_cpp+' '
    if cpp_defs != '':
       run_cmd(f'./xmlchange --append --id CAM_CONFIG_OPTS --val \" -cppdefs \' {cpp_defs} \'  \"')
-   # for ClimSim's modified namelist_definition.xml
    if src_mod_atm :
       run_cmd(f'./xmlchange --append --id CAM_CONFIG_OPTS --val \" -usr_src {dir_src_mod} \"')
    run_cmd('./xmlchange PIO_NETCDF_FORMAT=\"64bit_data\" ')

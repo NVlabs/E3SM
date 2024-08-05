@@ -28,6 +28,7 @@ This example job scripts will generate 13 months of simulation data using the NN
 
 Other two example job submission scripts (i.e., ```example_job_submit_v4.py``` and ```example_job_submit_v4_constrained.py```) use pretrained Unet models that uses the "v4" input/output configuration. Please read the section [NN-Emulator Namelists](#3-nn-emulator-namelists) for more details about 'v2' and 'v4' options.
 
+If you run these example job script on the Perlmutter cluster, you need to modify this line `acct = os.environ.get("MMF_NN_SLURM_ACCOUNT", "m4331")` in the example job script to use your own project account instead of m4331. For personal computing resources, this line is not necessary and you don't need to modify it. The example job scripts set to create 8 tasks for the hybrid simulation. You can modify this line `if 'CPU' in arch : max_mpi_per_node,atm_nthrds  =  2,4 ; max_task_per_node = 8` in the example job script to change the number of tasks depending on your computing resources.
 
 To use a costumized NN model, please follow section [How to Test a Customized NN Emulator](#4-how-to-test-a-customized-nn-emulator).
 
@@ -106,15 +107,15 @@ In this section, we will explain how you can run a hybrid simulation with a cust
 
 ### Using existing v2/v4 input/output configurations
 
-You need to prepare your NN model to take input array with shape of (batch_size, inputlength) and output array with shape of (batch_size, outputlength). You need to convert your NN model into Torchscript. During training, you need to prepare your training data to be consistent with v2/v4 input/output configurations.
+You need to prepare your NN model to take input array with shape of (batch_size, inputlength) and output array with shape of (batch_size, outputlength). You need to convert your NN model into Torchscript. During training, you need to prepare your training data to be consistent with v2/v4 input/output configurations (see the definition of `self.v2_rh_inputs` and `self.v4_inputs` in [this file](https://github.com/leap-stc/ClimSim/blob/online_testing/climsim_utils/data_utils.py)).
 
-You need to prepare your NN model to take un-normalized input features and also predict un-normalized output variables. While during model training, the input and output variables are typically normalized, you can write a wrapper model class to handle the input normalization and output un-normalization process.
+You need to prepare your NN model to take un-normalized input features and also predict un-normalized output variables. While during model training, the input and output variables are typically normalized, you can write a wrapper model class to handle the input normalization and output un-normalization process as well as to drop unused v2 or v4 input features.
 
-We provided instructions to reproduce our pretrained MLP_v2 and Unet_v4 models, convert them into TorchScript, and write a wrapper to deal with input/output normalization in the [ClimSim repository](https://github.com/leap-stc/ClimSim/tree/online_testing).
+We provided instructions to reproduce our pretrained MLP_v2 and Unet_v4 models, convert them into TorchScript, and write a wrapper to deal with input/output normalization in the [ClimSim repository](https://github.com/leap-stc/ClimSim) under [this folder](https://github.com/leap-stc/ClimSim/tree/main/online_testing/model_postprocessing).
 
 ### Using customized input/output configurations
 
-If you want to use a customized NN model with a different input configuration (you will still need to predict the same output variables with a length of 368), you need to modify ```components/eam/src/physics/cam/mmf_nn_emulator.F90``` to handle the new input features. In the "select case (to_lower(trim(cb_nn_var_combo)))" block, you need to add a new case option for your customized input configuration. You can refer to the existing 'v2' and 'v4' cases to see how to handle the input features.
+If you want to use a customized NN model with a different input configuration (you will still need to predict the same output variables with a length of 368), you need to modify `components/eam/src/physics/cam/mmf_nn_emulator.F90` to handle the new input features. In the `select case (to_lower(trim(cb_nn_var_combo)))` block, you need to add a new case option for your customized input configuration. You can refer to the existing 'v2' and 'v4' cases to see how to handle the input features.
 
 
 ## Author
