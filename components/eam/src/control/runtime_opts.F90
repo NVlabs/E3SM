@@ -283,8 +283,8 @@ contains
 #if defined(MMF_SAMXX) || defined(MMF_PAM)
    use prescribed_macv2,    only: prescribed_macv2_readnl
 #endif
-#ifdef CLIMSIM
-   use climsim,             only: climsim_readnl
+#ifdef MMF_NN_EMULATOR
+   use mmf_nn_emulator,             only: mmf_nn_emulator_readnl
 #endif
 
 !---------------------------Arguments-----------------------------------
@@ -555,9 +555,9 @@ contains
    call prescribed_macv2_readnl(nlfilename)
 #endif
 
-#ifdef CLIMSIM
-   ! Read CLIMSIM namelist
-   call climsim_readnl(nlfilename)
+#ifdef MMF_NN_EMULATOR
+   ! Read MMF_NN_EMULATOR namelist
+   call mmf_nn_emulator_readnl(nlfilename)
 #endif
 
    ! Print cam_inparm input variables to standard output

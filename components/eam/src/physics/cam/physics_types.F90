@@ -63,7 +63,7 @@ module physics_types
           lchnk,                &! chunk index
           ngrdcol,              &! -- Grid        -- number of active columns (on the grid)
           psetcols=0,           &! --             -- max number of columns set - if subcols = pcols*psubcols, else = pcols
-#if defined(MMF_ML_TRAINING) || defined(CLIMSIM)
+#if defined(MMF_ML_TRAINING) || defined(MMF_NN_EMULATOR)
           ncol=0,               &! --             -- sum of nsubcol for all ngrdcols - number of active columns
           ntracker=2             ! --             -- the number of previous steps' adv/sfc forcing and previous phys tendencies
 #else
@@ -97,7 +97,7 @@ module physics_types
      real(r8), dimension(:,:,:),allocatable      :: &
           q         ! constituent mixing ratio (kg/kg moist or dry air depending on type)
 
-#if defined(MMF_ML_TRAINING) || defined(CLIMSIM)
+#if defined(MMF_ML_TRAINING) || defined(MMF_NN_EMULATOR)
       real(r8), dimension(:,:,:),allocatable      :: &
          t_adv,   &
          u_adv,   &
@@ -1380,7 +1380,7 @@ end subroutine physics_ptend_copy
     ! Local variables
     !
     integer i, k, m, ncol
-#if defined(MMF_ML_TRAINING) || defined(CLIMSIM)
+#if defined(MMF_ML_TRAINING) || defined(MMF_NN_EMULATOR)
     integer j, ntracker
 
     ntracker = state_in%ntracker
@@ -1457,7 +1457,7 @@ end subroutine physics_ptend_copy
        end do
     end do
 
-#if defined(MMF_ML_TRAINING) || defined(CLIMSIM)
+#if defined(MMF_ML_TRAINING) || defined(MMF_NN_EMULATOR)
     do j = 1,ntracker
       do k = 1, pver
          do i = 1, ncol
@@ -1698,7 +1698,7 @@ subroutine physics_state_alloc(state,lchnk,psetcols)
 
   integer :: ierr=0, i
 
-#if defined(MMF_ML_TRAINING) || defined(CLIMSIM)
+#if defined(MMF_ML_TRAINING) || defined(MMF_NN_EMULATOR)
   integer :: ptracker
 
   !#number of steps to track in the past for some variables
@@ -1813,7 +1813,7 @@ subroutine physics_state_alloc(state,lchnk,psetcols)
   allocate(state%tw_cur(psetcols), stat=ierr)
   if ( ierr /= 0 ) call endrun('physics_state_alloc error: allocation error for state%tw_cur')
 
-#if defined(MMF_ML_TRAINING) || defined(CLIMSIM)
+#if defined(MMF_ML_TRAINING) || defined(MMF_NN_EMULATOR)
   allocate(state%t_adv(ptracker, psetcols,pver), stat=ierr)
   if ( ierr /= 0 ) call endrun('physics_state_alloc error: allocation error for state%t_adv')
   
@@ -1962,7 +1962,7 @@ subroutine physics_state_alloc(state,lchnk,psetcols)
   state%zm(:,:) = inf
   state%q(:,:,:) = inf
 
-#if defined(MMF_ML_TRAINING) || defined(CLIMSIM)
+#if defined(MMF_ML_TRAINING) || defined(MMF_NN_EMULATOR)
   state%t_adv(:,:,:) = inf
   state%u_adv(:,:,:) = inf
   state%t_phy(:,:,:) = 0.0
@@ -2127,7 +2127,7 @@ subroutine physics_state_dealloc(state)
   deallocate(state%tw_cur, stat=ierr)
   if ( ierr /= 0 ) call endrun('physics_state_dealloc error: deallocation error for state%tw_cur')
 
-#if defined(MMF_ML_TRAINING) || defined(CLIMSIM)
+#if defined(MMF_ML_TRAINING) || defined(MMF_NN_EMULATOR)
   deallocate(state%t_adv, stat=ierr)
   if ( ierr /= 0 ) call endrun('physics_state_alloc error: deallocation error for state%t_adv')
   
