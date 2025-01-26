@@ -17,6 +17,12 @@
 
 To launch a hybrid E3SM MMF-NN-Emulator run, one needs to first set up the E3SM environment and download dependent files by following the instructions in the [ClimSim-Online repository](https://github.com/leap-stc/climsim-online/). These instructions will ask you to download some dependent files from a shared google drive folder [E3SM_shared](https://drive.google.com/file/d/1rH8GIx6r5rurUpzaibH3gbDksv-gViXk/view?usp=sharing) that contains some pretrained NN models and some reference E3SM-MMF simulation outputs.
 
+Be sure to run the following command after git cloning:
+
+```bash
+git submodule update --init --recursive
+```
+
 To run a hybrid E3SM MMF-NN-Emulator simulation using our pretrained NN models used in [ClimSim-Online manuscript](https://arxiv.org/abs/2306.08754v6), you can run one of our provided example job submission scripts (```./climsim_scripts/example_job_submit_nnwrapper*.py```), e.g.,
 
 ```bash
@@ -24,7 +30,10 @@ cd climsim_scripts
 python example_job_submit_v2.py
 ```
 
-This example job scripts will generate 13 months of simulation data using the NN-Emulator with the pretrained MLP models that uses the "v2" input/output configuration. 
+This example job scripts will generate 13 months of simulation data using the NN-Emulator with the pretrained MLP models that uses the "v2" input/output configuration. On NERSC you will have to run the following command before using any scripts:
+```bash
+module load python
+```
 
 Other two example job submission scripts (i.e., ```example_job_submit_v4.py``` and ```example_job_submit_v4_constrained.py```) use pretrained Unet models that uses the "v4" input/output configuration. Please read the section [NN-Emulator Namelists](#3-nn-emulator-namelists) for more details about 'v2' and 'v4' options.
 
