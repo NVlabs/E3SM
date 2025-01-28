@@ -330,6 +330,7 @@ subroutine diag_init()
    call addfld ('DQ2PHYS',(/ 'lev' /), 'A','kg/kg/s','dQ2/dt from physics')
    call addfld ('DQ3PHYS',(/ 'lev' /), 'A','kg/kg/s','dQ3/dt from physics')
    call addfld ('DUPHYS',(/ 'lev' /), 'A','m/s/s','dU/dt from physics')
+   call addfld ('PS', horiz_only, 'A', 'Pa', 'Surface pressure')
 #endif
 
    call addfld ('fixerCLUBB',horiz_only,    'A','J/m2','dTE fixed by CLUBB')
@@ -1543,6 +1544,10 @@ end subroutine diag_conv_tend_ini
 
    if (hist_fld_active('DUPHYS')) then
       call outfld('DUPHYS   ',state%u_phy(1,:,:), pcols, lchnk)
+   end if
+
+   if (hist_fld_active('PS')) then
+      call outfld('PS   ',state%ps(1,:,:), pcols, lchnk)
    end if
 #endif
 
