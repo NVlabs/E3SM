@@ -30,6 +30,8 @@ Other two example job submission scripts (i.e., ```example_job_submit_v4.py``` a
 
 If you run these example job script on the Perlmutter cluster, you need to modify this line `acct = os.environ.get("MMF_NN_SLURM_ACCOUNT", "m4331")` in the example job script to use your own project account instead of m4331. For personal computing resources, this line is not necessary and you don't need to modify it. The example job scripts set to create 8 tasks for the hybrid simulation. You can modify this line `if 'CPU' in arch : max_mpi_per_node,atm_nthrds  =  2,4 ; max_task_per_node = 8` in the example job script to change the number of tasks depending on your computing resources.
 
+For compute resource requirements to run the containerized version of E3SM MMF-NN-Emulator, please refer to the [ClimSim-Online repository](https://github.com/leap-stc/climsim-online/) for more details. In general, more CPU cores improve performance but also increase memory requirements. Based on our tests, the following configurations are sufficient for running the ```example_job_submit_v4_constrained.py``` script: when using 32 CPU cores, 16 GB of memory is sufficient for running the hybrid simulation; When using 128 CPU cores, 64 GB of memory is sufficient. Different NN models may require different memory requirements.
+
 To use a costumized NN model, please follow section [How to Test a Customized NN Emulator](#4-how-to-test-a-customized-nn-emulator).
 
 
